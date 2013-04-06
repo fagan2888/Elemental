@@ -233,7 +233,11 @@ public:
     : std::runtime_error( msg ) { }
 };
 
-#ifndef RELEASE
+#ifdef RELEASE
+inline void PushCallStack( std::string ) {}
+inline void PushCallStack( const char* ) {}
+inline void PopCallStack() {}
+#else
 void PushCallStack( std::string s );
 void PopCallStack();
 void DumpCallStack();

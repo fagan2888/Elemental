@@ -12,6 +12,8 @@
 
 namespace elem {
 
+template <typename Int=int>
+class AutoMatrix;
 template<typename T,typename Int=int>
 class Matrix;
 

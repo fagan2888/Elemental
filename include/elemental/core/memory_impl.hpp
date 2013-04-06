@@ -12,36 +12,40 @@
 
 namespace elem {
 
-template<typename G>
+template <typename Int>
 inline 
-Memory<G>::Memory()
-: size_(0), buffer_(NULL)
+AutoMemory<Int>::AutoMemory( std::size_t chunk )
+: chunk_(chunk), size_(0), buffer_(0)
 { }
 
-template<typename G>
+template <typename Int>
 inline 
-Memory<G>::Memory( std::size_t size )
-: size_(size), buffer_(new G[size])
-{ }
-
-template<typename G>
-inline 
-Memory<G>::~Memory()
+AutoMemory<Int>::~AutoMemory()
 { delete[] buffer_; }
 
-template<typename G>
-inline G* 
-Memory<G>::Buffer() const
+template <typename Int>
+inline char* 
+AutoMemory<Int>::Buffer() const
 { return buffer_; }
 
-template<typename G>
+template <typename Int>
+inline char*
+AutoMemory<Int>::Buffer( Int i ) const
+{ return buffer_ + i * chunk_; }
+
+template <typename Int>
+inline size_t
+AutoMemory<Int>::Chunk() const
+{ return chunk_; }
+
+template <typename Int>
 inline std::size_t 
-Memory<G>::Size() const
+AutoMemory<Int>::Size() const
 { return size_; }
 
-template<typename G>
-inline void 
-Memory<G>::Require( std::size_t size )
+template <typename Int>
+inline char* 
+AutoMemory<Int>::Require( std::size_t size )
 {
     if( size > size_ )
     {
@@ -49,36 +53,57 @@ Memory<G>::Require( std::size_t size )
 #ifndef RELEASE
         try {
 #endif
-        buffer_ = new G[size];
+        buffer_ = new char[chunk_*size];
 #ifndef RELEASE
         } 
         catch( std::bad_alloc& exception )
         {
-            std::cerr << "Failed to allocate " << size*sizeof(G) 
+            std::cerr << "Failed to allocate " << size*chunk_
                       << " bytes" << std::endl;
             throw exception;
         }
 #endif
         size_ = size;
     }
+    return buffer_;
 }
 
-template<typename G>
+template <typename Int>
 inline void 
-Memory<G>::Release()
+AutoMemory<Int>::Release()
 {
-#ifndef POOL_MEMORY
+#ifndef POOL_AutoMemory
     this->Empty();
 #endif
 }
 
-template<typename G>
+template <typename Int>
 inline void 
-Memory<G>::Empty()
+AutoMemory<Int>::Empty()
 {
     delete[] buffer_;
     size_ = 0;
     buffer_ = 0;
+}
+
+template <typename T,typename Int>
+Memory<T,Int>::Memory()
+: AutoMemory<Int>( sizeof(T) )
+{
+}
+
+template <typename T,typename Int>
+T*
+Memory<T,Int>::Buffer() const
+{
+	return static_cast<T*>( AutoMemory<Int>::Buffer() );
+}
+
+template <typename T,typename Int>
+T*
+Memory<T,Int>::Buffer( Int i ) const
+{
+	return static_cast<T*>( AutoMemory<Int>::Buffer(i) );
 }
 
 } // namespace elem

@@ -12,22 +12,31 @@
 
 namespace elem {
 
-template<typename G>
-class Memory
+template <typename Int>
+class AutoMemory
 {
-    std::size_t size_;
-    G* buffer_;
+	std::size_t chunk_, size_;
+	char* buffer_;
 public:
-    Memory();
-    Memory( std::size_t size );
-    ~Memory();
-
-    G* Buffer() const;
-    std::size_t Size()   const;
-
-    void Require( std::size_t size );
+	AutoMemory( std::size_t chunk );
+	~AutoMemory();
+	char* Buffer() const;
+	char* Buffer( Int i ) const;
+	size_t Size() const;
+	size_t Chunk() const;
+    char* Require( std::size_t size );
     void Release();
     void Empty();
+};
+
+template <typename T,typename Int>
+class Memory : public AutoMemory<Int>
+{
+public:
+	Memory();
+    T* Buffer() const;
+    T* Buffer( Int i ) const;
+    T* Require( std::size_t size );
 };
 
 } // namespace elem

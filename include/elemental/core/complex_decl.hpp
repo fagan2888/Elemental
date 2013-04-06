@@ -181,6 +181,24 @@ struct IsComplex { enum { val=0 }; };
 template<typename R>
 struct IsComplex<Complex<R> > { enum { val=1 }; };
 
+// 
+// Helper functions for getting, setting, and updating individual values.
+// These are intended for internal use after with a deliberate decision to
+// skip consistency checking (i.e., to ensure you do not try to set the imaginary
+// portion of a real value.
+//
+
+template <typename R> const R& GReal_( const         R & a ) { return a; }
+template <typename R> const R& GReal_( const Complex<R>& a ) { return a.real; }
+template <typename R>       R& SReal_(               R & a ) { return a; }
+template <typename R>       R& SReal_(       Complex<R>& a ) { return a.real; }
+
+template <typename R> const R& GImag_( const         R & a ) { return a; }
+template <typename R> const R& GImag_( const Complex<R>& a ) { return a.real; }
+template <typename R>       R& SImag_(       Complex<R>& a ) { return a.real; }
+template <typename R>       R& SImag_(               R & a )
+{ throw std::logic_error("Cannot set the imaginary portion of a real value");  }
+
 } // namespace elem
 
 #endif // ifndef CORE_COMPLEX_DECL_HPP
