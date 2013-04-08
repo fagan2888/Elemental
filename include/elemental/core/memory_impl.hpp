@@ -89,22 +89,17 @@ AutoMemory<Int>::Empty()
 template <typename T,typename Int>
 Memory<T,Int>::Memory()
 : AutoMemory<Int>( sizeof(T) )
-{
-}
+{}
 
 template <typename T,typename Int>
 T*
 Memory<T,Int>::Buffer() const
-{
-	return static_cast<T*>( AutoMemory<Int>::Buffer() );
-}
+{ return static_cast<T*>( static_cast<void*>(AutoMemory<Int>::Buffer()) ); }
 
 template <typename T,typename Int>
 T*
 Memory<T,Int>::Buffer( Int i ) const
-{
-	return static_cast<T*>( AutoMemory<Int>::Buffer(i) );
-}
+{ return Buffer() + i; }
 
 } // namespace elem
 

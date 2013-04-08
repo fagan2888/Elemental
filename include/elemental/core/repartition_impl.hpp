@@ -46,9 +46,9 @@ void RepartitionUp__
 {
     A1Height = std::min(A1Height,AT.Height());
     const Int offset = AT.Height()-A1Height; 
-    View__( A0, AT, 0,      0, offset,   AT.Width(), lock, lock );
-    View__( A1, AT, offset, 0, A1Height, AT.Width(), lock, lock );
-    View__( A2, AB, lock, lock );
+    View__( A0, AT, 0,      0, offset,   AT.Width(), lock );
+    View__( A1, AT, offset, 0, A1Height, AT.Width(), lock );
+    View__( A2, AB, lock );
 }
 
 template<typename Int> inline
@@ -67,7 +67,7 @@ void RepartitionUp_
     	AT.AssertUnlocked( AM::PartitionLock );
     	AB.AssertUnlocked( AM::PartitionLock );
     }
-    AT.AssertContiguous2x1( AB );
+    AssertContiguous2x1( AT, AB );
 	RepartitionUp__( AT, A0, A1, AB, A2, A1Height, lock );
     PopCallStack();
 }
@@ -163,9 +163,9 @@ inline void RepartitionDown__
 {
     A1Height = std::min(A1Height,AB.Height());
     const Int offset = AB.Height()-A1Height; 
-    View__( A0, AT, lock, lock );
-    View__( A1, AB, 0,        0, A1Height, AB.Width(), lock, lock );
-    View__( A2, AB, A1Height, 0, offset,   AB.Width(), lock, lock );
+    View__( A0, AT, lock );
+    View__( A1, AB, 0,        0, A1Height, AB.Width(), lock );
+    View__( A2, AB, A1Height, 0, offset,   AB.Width(), lock );
 }
   
 template<typename Int>
@@ -184,7 +184,7 @@ inline void RepartitionDown_
     	AT.AssertUnlocked( AM::PartitionLock );
     	AB.AssertUnlocked( AM::PartitionLock );
     }
-    AT.AssertContiguous2x1( AB );
+    AssertContiguous2x1( AT, AB );
     RepartitionDown__( AT, A0, A1, AB, A2, A1Height, lock );
     PopCallStack();
 }
@@ -283,7 +283,7 @@ RepartitionLeft__
     const Int offset = AL.Width()-A1Width;
     View__( A0, AL, 0, 0,      AL.Height(), offset , lock );
     View__( A1, AL, 0, offset, AL.Height(), A1Width, lock );
-    View__( A2, AR, lock, lock );
+    View__( A2, AR, lock );
 }
 
 template<typename Int>
@@ -302,8 +302,8 @@ RepartitionLeft_
     	AL.AssertUnlocked( AM::PartitionLock );
     	AR.AssertUnlocked( AM::PartitionLock );
     }
-    AL.AssertContiguous1x2( AR );
-    RepartitionLeft__( AL, AR, A0, A1, A2, A1Width );
+    AssertContiguous1x2( AL, AR );
+    RepartitionLeft__( AL, AR, A0, A1, A2, A1Width, lock );
     PopCallStack();
 }
 
@@ -393,7 +393,7 @@ RepartitionRight__
 {
     A1Width = std::min(A1Width,AR.Width());
     const Int offset = AR.Width()-A1Width;
-    View__( A0, AL, lock, lock );
+    View__( A0, AL, lock );
     View__( A1, AR, 0, 0,       AR.Height(), A1Width, lock );
     View__( A2, AR, 0, A1Width, AR.Height(), offset , lock );
 }
@@ -414,8 +414,8 @@ RepartitionRight_
     	AL.AssertUnlocked( AM::PartitionLock );
     	AR.AssertUnlocked( AM::PartitionLock );
     }
-    AL.AssertContiguous1x2( AR );
-    RepartitionRight__( AL, AR, A0, A1, A2, A1Width );
+    AssertContiguous1x2( AL, AR );
+    RepartitionRight__( AL, AR, A0, A1, A2, A1Width, lock );
     PopCallStack();
 }
 
@@ -520,10 +520,10 @@ RepartitionUpDiagonal__
 
 template<typename Int>
 inline void
-RepartitionUpDiagonal
-( AM& ATL, AM& ATR, AM& A00, AM& A01, AM& A02,
-                    AM& A10, AM& A11, AM& A12,
-  AM& ABL, AM& ABR, AM& A20, AM& A21, AM& A22, Int bsize, bool lock )
+RepartitionUpDiagonal_
+( const AM& ATL, const AM& ATR, AM& A00, AM& A01, AM& A02,
+                       AM& A10, AM& A11, AM& A12,
+  const AM& ABL, const AM& ABR, AM& A20, AM& A21, AM& A22, Int bsize, bool lock )
 {
     PushCallStack("RepartitionUpDiagonal [Matrix]");
     ATL.AssertDataTypes( ATR );
@@ -544,7 +544,7 @@ RepartitionUpDiagonal
     	ABL.AssertUnlocked( AM::PartitionLock );
     	ABR.AssertUnlocked( AM::PartitionLock );
     }
-    ATL.AssertContiguous2x2( ATR, ABL, ABR );
+    AssertContiguous2x2( ATL, ATR, ABL, ABR );
     RepartitionUpDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A21, A21, A22, bsize, lock );
     PopCallStack();
 }
@@ -684,7 +684,7 @@ RepartitionDownDiagonal__
 
 template<typename Int>
 inline void
-RepartitionUpDiagonal_
+RepartitionDownDiagonal_
 ( const AM& ATL, const AM& ATR, AM& A00, AM& A01, AM& A02,
                        AM& A10, AM& A11, AM& A12,
   const AM& ABL, const AM& ABR, AM& A20, AM& A21, AM& A22, Int bsize, bool lock )
@@ -708,7 +708,7 @@ RepartitionUpDiagonal_
     	ABL.AssertUnlocked( AM::PartitionLock );
     	ABR.AssertUnlocked( AM::PartitionLock );
     }
-    ATL.AssertContiguous2x2( ATR, ABL, ABR );
+    AssertContiguous2x2( ATL, ATR, ABL, ABR );
     RepartitionDownDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A21, A21, A22, bsize, lock );
     PopCallStack();
 }

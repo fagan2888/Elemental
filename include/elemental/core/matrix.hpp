@@ -27,6 +27,21 @@ enum MatrixTypes {
 	Unknown
 };
 
+template <typename Int> 
+void AssertNonnegative( Int i, const char* s );
+template <typename Int> void AssertContiguous2x1( 
+	const AutoMatrix<Int>& A0, 
+	const AutoMatrix<Int>& A1 );
+template <typename Int> void AssertContiguous1x2( 
+	const AutoMatrix<Int>& A0, const AutoMatrix<Int>& A1 );
+template <typename Int> void AssertContiguous2x2( 
+	const AutoMatrix<Int>& A00, const AutoMatrix<Int>& A01,
+	const AutoMatrix<Int>& A10, const AutoMatrix<Int>& A11 );
+template <typename Int> void AssertContiguous3x3( 
+	const AutoMatrix<Int>& A00, const AutoMatrix<Int>& A01, const AutoMatrix<Int>& A02,
+	const AutoMatrix<Int>& A10, const AutoMatrix<Int>& A11, const AutoMatrix<Int>& A12,
+	const AutoMatrix<Int>& A20, const AutoMatrix<Int>& A21, const AutoMatrix<Int>& A22 );
+    
 template <typename Int>
 class AutoMatrix
 {
@@ -44,12 +59,19 @@ public:
     void AssertView( Int i, Int j, Int height, Int width ) const;
     enum LockTypes { ViewLock, PartitionLock, MiscLock };
     void AssertUnlocked( LockTypes ltype = MiscLock ) const;
-	void AssertContiguous2x1( const Self& B ) const;
-	void AssertContiguous1x2( const Self& B ) const;
-	void AssertContiguous2x2( const Self& B12, const Self& B21, const Self& B22 ) const;    
-	void AssertContiguous3x3( const Self& A01, const Self& A02,
+    
+    friend void AssertContiguous2x1<>( 
+		const Self& A0, 
+		const Self& A1 );
+	friend void AssertContiguous1x2<>( 
+		const Self& A0, const Self& A1 );
+	friend void AssertContiguous2x2<>( 
+		const Self& A00, const Self& A01,
+		const Self& A10, const Self& A11 );
+	friend void AssertContiguous3x3<>( 
+		const Self& A00, const Self& A01, const Self& A02,
 		const Self& A10, const Self& A11, const Self& A12,
-		const Self& A20, const Self& A21, const Self& A22 ) const;
+		const Self& A20, const Self& A21, const Self& A22 );
     
 	//
 	// Factories
@@ -60,6 +82,9 @@ public:
 	 static Self* Create( MatrixTypes type, Int height, Int width, Int ldim );
 	 static Self* Create( MatrixTypes type, Int height, Int width, void* buffer, Int ldim );
 	 static Self* Create( MatrixTypes type, Int height, Int width, const void* buffer, Int ldim );
+	// Implemented by derived classes
+    // static Self* Create( Int height, Int width, T* buffer, Int ldim );
+    // static Self* Create( Int height, Int width, const T* buffer, Int ldim );
 	virtual Self* CloneEmpty() const; // = 0;
 	virtual Self* Clone() const; // = 0;
 	
@@ -127,17 +152,17 @@ public:
 	virtual void CopyFrom( const Self& A );
     Self& operator=( const Self& A );
 
-	void Attach( MatrixTypes dtype, Int height, Int width, void* buffer, Int ldim );
-	void LockedAttach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim );
-	
     void Empty();
     void ResizeTo( Int height, Int width );
     void ResizeTo( Int height, Int width, Int ldim );
+	void Attach( MatrixTypes dtype, Int height, Int width, void* buffer, Int ldim );
+	void LockedAttach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim );
     
 protected:
 	AutoMatrix( size_t dsize );
-	AutoMatrix( size_t dsize, Int height, Int width );
-	AutoMatrix( size_t dsize, Int height, Int width, Int ldim );
+	// Use this constructor with internally managed data.
+	AutoMatrix( size_t dsize, void* data, Int height, Int width, Int ldim );
+	// Use these constructors for extrenally managed data.
 	AutoMatrix( size_t dsize, Int height, Int width, void* data, Int ldim );
 	AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim );
 	
@@ -190,6 +215,8 @@ protected:
 	void Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     void Attach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     
+    void* Require( size_t numel ); // = 0;
+    
     //
     // By making this one function public that really should not be, we avoid having to
     // declare every view and partition function to be a friend. Fair trade, I think.
@@ -200,9 +227,10 @@ public: // but not.
     void Attach__( const Self& A, Int i, Int j, Int height, Int width, bool lock );
 	
 private:
+	size_t dsize_;
     Int height_, width_, ldim_;
-    void* data_; bool locked_;
-    AutoMemory<Int> memory_;
+    bool viewing_, locked_;
+	void* data_; 
 	void Attach_( Int height, Int width, const void* buffer, Int ldim, bool lock, Int i, Int j );
 };
 
@@ -226,8 +254,11 @@ public:
     Matrix( Int height, Int width, T* buffer, Int ldim );
     Matrix( Int height, Int width, const T* buffer, Int ldim );
     Matrix( const Self& A );
-    Parent* CloneEmpty() const;
-	Parent* Clone() const;
+    static Self* Create( Int height, Int width, T* buffer, Int ldim );
+    static Self* Create( Int height, Int width, const T* buffer, Int ldim );
+    
+    Self* CloneEmpty() const;
+	Self* Clone() const;
 
     //
     // Basic information
@@ -335,6 +366,9 @@ protected:
     void SetImagPartOfDiagonal_( const Parent& d, Int offset );
     void UpdateImagPartOfDiagonal_( const Parent& d, Int offset );
     
+private:    
+	Memory<T,Int> memory_;
+	void* Require( size_t numel );
 };
 
 } // namespace elem

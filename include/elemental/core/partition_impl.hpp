@@ -51,11 +51,11 @@ template<typename Int> inline
 void PartitionUp_( const AM& A, AM& AT, AM& AB, Int heightAB, bool lock )
 {
 	PushCallStack( "PartitionUp [Matrix]" );
-    A.AssertNonnegative( heightAB, "height of bottom partition" );
+    AssertNonnegative( heightAB, "height of bottom partition" );
 	A.AssertDataTypes( AT );
 	A.AssertDataTypes( AB );
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionUp__( AT, AB, heightAB, lock );
+	PartitionUp__( A, AT, AB, heightAB, lock );
 	PopCallStack();
 }
 
@@ -146,11 +146,11 @@ template<typename Int> inline
 void PartitionDown_( const AM& A, AM& AT, AM& AB, Int heightAT, bool lock )
 {
 	PushCallStack( "PartitionDown [Matrix]" );
-    A.AssertNonnegative( heightAT, "height of top partition" );
+    AssertNonnegative( heightAT, "height of top partition" );
 	A.AssertDataTypes( AT );
 	A.AssertDataTypes( AB );
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionDown__( AT, AB, heightAT, lock );
+	PartitionDown__( A, AT, AB, heightAT, lock );
 	PopCallStack();
 }
 
@@ -239,22 +239,22 @@ template<typename Int> inline
 void PartitionLeft_( const AM& A, AM& AL, AM& AR, Int widthAR, bool lock )
 {
 	PushCallStack( "PartitionLeft [Matrix]" );
-    A.AssertNonnegative( widthAR, "width of right partition" );
+    AssertNonnegative( widthAR, "width of right partition" );
 	A.AssertDataTypes( AL );
 	A.AssertDataTypes( AR );	
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionLeft__( AL, AR, widthAR, lock );
+	PartitionLeft__( A, AL, AR, widthAR, lock );
 	PopCallStack();
 }
 
 template<typename Int>
 inline void
-PartitionLeft( AM& A, AM& AL, AM& AR, int widthAR )
+PartitionLeft( AM& A, AM& AL, AM& AR, Int widthAR )
 { PartitionLeft_( A, AL, AR, widthAR, false ); }
 
-template<typename Int,typename T>
+template<typename T,typename Int>
 inline void
-PartitionLeft( M& A, M& AL, M& AR, int widthAR )
+PartitionLeft( M& A, M& AL, M& AR, Int widthAR )
 { RUNDERSCORE(PartitionLeft_)( A, AL, AR, widthAR, false ); }
 
 template<typename T, Distribution U, Distribution V,typename Int>
@@ -277,12 +277,12 @@ PartitionLeft( DM& A, DM& AL, DM& AR, Int widthAR )
 
 template<typename Int>
 inline void
-LockedPartitionLeft( const AM& A, AM& AL, AM& AR, int widthAR )
+LockedPartitionLeft( const AM& A, AM& AL, AM& AR, Int widthAR )
 { PartitionLeft_( A, AL, AR, widthAR, true ); }
 
-template<typename Int,typename T>
+template<typename T,typename Int>
 inline void
-LockedPartitionLeft( const M& A, M& AL, M& AR, int widthAR )
+LockedPartitionLeft( const M& A, M& AL, M& AR, Int widthAR )
 { RUNDERSCORE(PartitionLeft_)( A, AL, AR, widthAR, true ); }
 
 template<typename T, Distribution U, Distribution V,typename Int>
@@ -320,11 +320,11 @@ template<typename Int> inline
 void PartitionRight_( const AM& A, AM& AL, AM& AR, Int widthAL, bool lock )
 {
 	PushCallStack( "PartitionRight [Matrix]" );
-    A.AssertNonnegative( widthAL, "width of left partition" );
+    AssertNonnegative( widthAL, "width of left partition" );
 	A.AssertDataTypes( AL );
 	A.AssertDataTypes( AR );		
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionRight__( AL, AR, widthAL, lock );
+	PartitionRight__( A, AL, AR, widthAL, lock );
 	PopCallStack();
 }
 
@@ -407,13 +407,13 @@ template<typename Int> inline
 void PartitionUpLeftDiagonal_( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& ABR, Int diagABR, bool lock )
 {
 	PushCallStack( "PartitionUpLeftDiagonal [Matrix]" );
-    A.AssertNonnegative( diagABR, "size of bottom-right block" );
+    AssertNonnegative( diagABR, "size of bottom-right block" );
 	A.AssertDataTypes( ATL );
 	A.AssertDataTypes( ATR );		
 	A.AssertDataTypes( ABL );
 	A.AssertDataTypes( ABR );
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionUpLeftDiagonal__( ATL, ATR, ABL, ABR, diagABR, lock );
+	PartitionUpLeftDiagonal__( A, ATL, ATR, ABL, ABR, diagABR, lock );
 	PopCallStack();
 }
 
@@ -457,7 +457,7 @@ LockedPartitionUpDiagonal
 
 template<typename T,typename Int>
 inline void
-PartitionUpDiagonal
+LockedPartitionUpDiagonal
 ( const M& A, M& ATL, M& ATR,
               M& ABL, M& ABR, Int diagABR )
 { RUNDERSCORE(PartitionUpLeftDiagonal_)( A, ATL, ATR, ABL, ABR, diagABR, true ); }
@@ -531,7 +531,7 @@ LockedPartitionUpLeftDiagonal
 
 template<typename T,typename Int>
 inline void
-PartitionUpLeftDiagonal
+LockedPartitionUpLeftDiagonal
 ( const M& A, M& ATL, M& ATR,
               M& ABL, M& ABR, Int diagABR )
 { RUNDERSCORE(PartitionUpLeftDiagonal_)( A, ATL, ATR, ABL, ABR, diagABR, true ); }
@@ -584,13 +584,13 @@ template<typename Int> inline
 void PartitionUpRightDiagonal_( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& ABR, Int diagABR, bool lock )
 {
 	PushCallStack( "PartitionUpRightDiagonal [Matrix]" );
-    A.AssertNonnegative( diagABR, "size of bottom-right block" );
+    AssertNonnegative( diagABR, "size of bottom-right block" );
 	A.AssertDataTypes( ATL );
 	A.AssertDataTypes( ATR );		
 	A.AssertDataTypes( ABL );
 	A.AssertDataTypes( ABR );
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionUpRightDiagonal__( ATL, ATR, ABL, ABR, diagABR, lock );
+	PartitionUpRightDiagonal__( A, ATL, ATR, ABL, ABR, diagABR, lock );
 	PopCallStack();
 }
 
@@ -641,7 +641,7 @@ LockedPartitionUpRightDiagonal
 
 template<typename T,typename Int>
 inline void
-PartitionUpRightDiagonal
+LockedPartitionUpRightDiagonal
 ( const M& A, M& ATL, M& ATR,
               M& ABL, M& ABR, Int diagABR )
 { RUNDERSCORE(PartitionUpRightDiagonal_)( A, ATL, ATR, ABL, ABR, diagABR, true ); }
@@ -693,13 +693,13 @@ template<typename Int> inline
 void PartitionDownLeftDiagonal_( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& ABR, Int diagATL, bool lock )
 {
 	PushCallStack( "PartitionDownLeftDiagonal [Matrix]" );
-    A.AssertNonnegative( diagATL, "size of top-left block" );
+    AssertNonnegative( diagATL, "size of top-left block" );
 	A.AssertDataTypes( ATL );
 	A.AssertDataTypes( ATR );		
 	A.AssertDataTypes( ABL );
 	A.AssertDataTypes( ABR );
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionDownLeftDiagonal__( ATL, ATR, ABL, ABR, diagATL, lock );
+	PartitionDownLeftDiagonal__( A, ATL, ATR, ABL, ABR, diagATL, lock );
 	PopCallStack();
 }
 
@@ -868,13 +868,13 @@ template<typename Int> inline
 void PartitionDownRightDiagonal_( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& ABR, Int diagATL, bool lock )
 {
 	PushCallStack( "PartitionDownRightDiagonal [Matrix]" );
-    A.AssertNonnegative( diagATL, "size of top-left block" );
+    AssertNonnegative( diagATL, "size of top-left block" );
 	A.AssertDataTypes( ATL );
 	A.AssertDataTypes( ATR );		
 	A.AssertDataTypes( ABL );
 	A.AssertDataTypes( ABR );
 	if ( !lock ) A.AssertUnlocked( AM::PartitionLock );
-	PartitionDownRightDiagonal__( ATL, ATR, ABL, ABR, diagATL, lock );
+	PartitionDownRightDiagonal__( A, ATL, ATR, ABL, ABR, diagATL, lock );
 	PopCallStack();
 }
 

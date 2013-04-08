@@ -322,7 +322,7 @@ void View1x2_( AM& A, const AM& BL, const AM& BR, bool lock )
 		BL.AssertUnlocked( AM::ViewLock );
 		BR.AssertUnlocked( AM::ViewLock );
 	}
-	BL.AssertContiguous1x2( BR );
+	AssertContiguous1x2( BL, BR );
     View1x2__( A, BL, BR, lock );
     PopCallStack();
 }
@@ -444,7 +444,7 @@ void View2x1_( AM& A, const AM& BT, const AM& BB, bool lock )
 		BT.AssertUnlocked( AM::ViewLock );
 		BB.AssertUnlocked( AM::ViewLock );
 	}
-	BT.AssertContiguous2x1( BB );
+	AssertContiguous2x1( BT, BB );
 	View2x1__( A, BT, BB, lock );
     PopCallStack();
 }
@@ -575,7 +575,7 @@ void View2x2_( AM& A, const AM& BTL, const AM& BTR,
 		BBL.AssertUnlocked( AM::ViewLock );
 		BBR.AssertUnlocked( AM::ViewLock );
 	}
-	BTL.AssertContiguous2x2( BTR, BBL, BBR );
+	AssertContiguous2x2( BTL, BTR, BBL, BBR );
 	View2x2__( A, BTL, BTR, BBL, BBR, lock );
     PopCallStack();
 }

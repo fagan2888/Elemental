@@ -28,7 +28,7 @@ static void vbs_() {
 //
 
 template <class Int>
-static void AssertNonnegative( Int i, const char* s )
+void AssertNonnegative( Int i, const char* s )
 {
 	if ( i < 0 ) {
         std::ostringstream msg;
@@ -107,31 +107,32 @@ void AutoMatrix<Int>::AssertView( Int i, Int j, Int height, Int width ) const
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertContiguous1x2( const Self& B ) const
+void AssertContiguous1x2( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B )
 {
-    if( Height() != B.Height() )
+    if( A.Height() != B.Height() )
         throw std::logic_error("1x2 must have consistent heights");
-    if( LDim() != B.LDim() )
+    if( A.LDim() != B.LDim() )
         throw std::logic_error("1x2 must have consistent ldims");
-    if( LockedBuffer(0,Width()) != B.LockedBuffer() )
+    if( A.LockedBuffer_(0,A.Width()) != B.LockedBuffer_() )
         throw std::logic_error("2x1 must have contiguous memory");
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertContiguous2x1( const Self& B ) const
+void AssertContiguous2x1( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B )
 {
-    if( Width() != B.Width() )
+    if( A.Width() != B.Width() )
         throw std::logic_error("2x1 must have consistent widths");
-    if( LDim() != B.LDim() )
+    if( A.LDim() != B.LDim() )
         throw std::logic_error("2x1 must have consistent ldims");
-    if( LockedBuffer(Height(),0) != B.LockedBuffer() )
+    if( A.LockedBuffer_(A.Height(),0) != B.LockedBuffer() )
         throw std::logic_error("2x1 must have contiguous memory");
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertContiguous2x2( const Self& BTR, const Self& BBL, const Self& BBR ) const
+void AssertContiguous2x2
+( const AutoMatrix<Int>& BTL, const AutoMatrix<Int>& BTR, 
+  const AutoMatrix<Int>& BBL, const AutoMatrix<Int>& BBR )
 {
-	const Self& BTL = *this;
     if( BTL.Width()  != BBL.Width()   ||
         BTR.Width()  != BBR.Width()   ||
         BTL.Height() != BTR.Height() ||
@@ -141,19 +142,18 @@ void AutoMatrix<Int>::AssertContiguous2x2( const Self& BTR, const Self& BBL, con
         BTR.LDim() != BBL.LDim() ||
         BBL.LDim() != BBR.LDim()   )
         throw std::logic_error("2x2 must have consistent ldims");
-    if( BBL.LockedBuffer() != BTL.LockedBuffer(BTL.Height(),0) ||
-        BTR.LockedBuffer() != BTL.LockedBuffer(0,BTL.Width())  ||
-        BBR.LockedBuffer() != BTR.LockedBuffer(BTR.Height(),0) )
+    if( BBL.LockedBuffer_() != BTL.LockedBuffer_(BTL.Height(),0) ||
+        BTR.LockedBuffer_() != BTL.LockedBuffer_(0,BTL.Width())  ||
+        BBR.LockedBuffer_() != BTR.LockedBuffer_(BTR.Height(),0) )
         throw std::logic_error("2x2 must have contiguous memory");
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertContiguous3x3(
-		                 const Self& A01, const Self& A02,
-		const Self& A10, const Self& A11, const Self& A12,
-		const Self& A20, const Self& A21, const Self& A22 ) const
+void AssertContiguous3x3(
+		const AutoMatrix<Int>& A00, const AutoMatrix<Int>& A01, const AutoMatrix<Int>& A02,
+		const AutoMatrix<Int>& A10, const AutoMatrix<Int>& A11, const AutoMatrix<Int>& A12,
+		const AutoMatrix<Int>& A20, const AutoMatrix<Int>& A21, const AutoMatrix<Int>& A22 )
 {
-	const Self& A00 = *this;
 	if ( A00.Width()  != A10.Width()  || A00.Width()  != A20.Width()  ||
 	     A01.Width()  != A11.Width()  || A01.Width()  != A21.Width()  ||
 	     A02.Width()  != A12.Width()  || A02.Width()  != A22.Width()  ||
@@ -165,15 +165,15 @@ void AutoMatrix<Int>::AssertContiguous3x3(
 	     A01.LDim() != A11.LDim() || A01.LDim() != A21.LDim() ||
 	     A02.LDim() != A12.LDim() || A02.LDim() != A22.LDim() )
         throw std::logic_error("3x3 must have consistent ldims");
-    if(  A01.LockedBuffer() != A00.LockedBuffer(0,A00.Width())  ||
-    	 A02.LockedBuffer() != A01.LockedBuffer(0,A01.Width())  ||
-    	 A10.LockedBuffer() != A00.LockedBuffer(A00.Height(),0) ||
-    	 A11.LockedBuffer() != A01.LockedBuffer(A01.Height(),0) ||
-    	 A12.LockedBuffer() != A02.LockedBuffer(A02.Height(),0) ||
-    	 A20.LockedBuffer() != A00.LockedBuffer(A10.Height(),0) ||
-    	 A21.LockedBuffer() != A01.LockedBuffer(A11.Height(),0) ||
-    	 A22.LockedBuffer() != A02.LockedBuffer(A12.Height(),0) )
-        throw std::logic_error("2x2 must have contiguous memory");
+    if(  A01.LockedBuffer_() != A00.LockedBuffer_(0,A00.Width())  ||
+    	 A02.LockedBuffer_() != A01.LockedBuffer_(0,A01.Width())  ||
+    	 A10.LockedBuffer_() != A00.LockedBuffer_(A00.Height(),0) ||
+    	 A11.LockedBuffer_() != A01.LockedBuffer_(A01.Height(),0) ||
+    	 A12.LockedBuffer_() != A02.LockedBuffer_(A02.Height(),0) ||
+    	 A20.LockedBuffer_() != A00.LockedBuffer_(A10.Height(),0) ||
+    	 A21.LockedBuffer_() != A01.LockedBuffer_(A11.Height(),0) ||
+    	 A22.LockedBuffer_() != A02.LockedBuffer_(A12.Height(),0) )
+        throw std::logic_error("3x3 must have contiguous memory");
 }
 
 static const char RealTypes[] = {
@@ -220,6 +220,13 @@ static const char *TypeNames[] = {
 #endif
 	"Unknown"
 };
+
+static void CastingError( MatrixTypes A, MatrixTypes B )
+{
+	std::ostringstream msg;
+	msg << "Casting error: cannot implicitly cast from " << TypeNames[A] << " to " << TypeNames[B];
+	throw std::logic_error( msg.str() );
+}
 
 template <typename Int>
 void AutoMatrix<Int>::AssertDataTypes( const Self& BB, bool unknown_ok ) const
@@ -274,38 +281,59 @@ static void AssertBuffer( const T* buffer )
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize )
-: memory_(dsize),
-  height_(0), width_(0), ldim_(1),
-  data_(0), locked_(false)
-{ }
+: dsize_(dsize), height_(0), width_(0), ldim_(1),
+  viewing_(false), locked_(false),
+  data_(0)
+{}
 
 template<typename Int>
-AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width )
-: height_(height), width_(width), ldim_(std::max(height,1)),
-  locked_(false), memory_(dsize)
+AutoMatrix<Int>::AutoMatrix( size_t dsize, void* data, Int height, Int width, Int ldim )
+: dsize_(dsize_), height_(height), width_(width), ldim_(std::max(ldim,std::max(height,1))),
+  viewing_(false), locked_(false),
+  data_(data)
+{}
+
+template<typename T,typename Int>
+Matrix<T,Int>::Matrix( Int height, Int width )
+: AutoMatrix<Int>( sizeof(T), memory_.Require( height * width ), height, width, height )
 { 
-	data_ = memory_.Require( ldim_ * width_ );
+#ifndef RELEASE
+	AssertDimensions( height, width, std::max( height, 1 ) );
+#endif
 }
 
-template<typename Int>
-AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, Int ldim )
-: height_(height), width_(width), ldim_(ldim),
-  locked_(false), memory_(dsize)
+template<typename T,typename Int>
+Matrix<T,Int>::Matrix( Int height, Int width, Int ldim )
+: AutoMatrix<Int>( sizeof(T), memory_.Require( ldim * width ), height, width, ldim )
 { 
-	data_ = memory_.Require( ldim_ * width_ );
+#ifndef RELEASE
+	AssertDimensions( height, width, ldim );
+#endif
 }
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, void* data, Int ldim )
-: height_(height), width_(width), ldim_(ldim),
-  data_(data), locked_(false), memory_(dsize)
-{ }
+: dsize_(dsize_), height_(height), width_(width), ldim_(std::max(ldim,1)),
+  viewing_(true), locked_(false),
+  data_(data)
+{}
+
+template<typename T,typename Int>
+Matrix<T,Int>::Matrix( Int height, Int width, T* data, Int ldim )
+: AutoMatrix<Int>( sizeof(T), height, width, data, ldim )
+{}
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim )
-: height_(height), width_(width), ldim_(ldim),
-  data_(const_cast<void*>(data)), locked_(true), memory_(dsize)
-{ }
+: dsize_(dsize), height_(height), width_(width), ldim_(ldim),
+  viewing_(true), locked_(true),
+  data_(const_cast<void*>(data))
+{}
+
+template<typename T,typename Int>
+Matrix<T,Int>::Matrix( Int height, Int width, const T* data, Int ldim )
+: AutoMatrix<Int>( sizeof(T), height, width, data, ldim )
+{}
 
 template<typename Int>
 AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type )
@@ -355,11 +383,6 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 	}
 }
 
-template<typename T,typename Int>
-Matrix<T,Int>::Matrix( Int height, Int width )
-: AutoMatrix<Int>( sizeof(T), height, width )
-{ }
-
 template<typename Int>
 AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width, Int ldim )
 {
@@ -382,11 +405,6 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 	return 0;
 	}
 }
-
-template<typename T,typename Int>
-Matrix<T,Int>::Matrix( Int height, Int width, Int ldim )
-: AutoMatrix<Int>( sizeof(T), height, width, ldim )
-{ }
 
 template<typename Int>
 AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width, const void* buffer, Int ldim )
@@ -412,10 +430,11 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 	}
 }
 
-template<typename T,typename Int>
-Matrix<T,Int>::Matrix( Int height, Int width, const T* buffer, Int ldim )
-: AutoMatrix<Int>( sizeof(T), height, width, buffer, ldim )
-{ }
+template <class T,class Int>
+Matrix<T,Int>* Matrix<T,Int>::Create( Int height, Int width, const T* buffer, Int ldim )
+{
+	return new Self( height, width, buffer, ldim );
+}
 
 template<typename Int>
 AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width, void* buffer, Int ldim )
@@ -441,10 +460,11 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 	}
 }
 
-template<typename T,typename Int>
-Matrix<T,Int>::Matrix( Int height, Int width, T* buffer, Int ldim )
-: AutoMatrix<Int>( sizeof(T), height, width, buffer, ldim )
-{ }
+template <class T,class Int>
+Matrix<T,Int>* Matrix<T,Int>::Create( Int height, Int width, T* buffer, Int ldim )
+{
+	return new Self( height, width, buffer, ldim );
+}
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( const Self& A )
@@ -461,11 +481,9 @@ AutoMatrix<Int>::CloneEmpty() const
 }
 
 template<typename T,typename Int>
-AutoMatrix<Int>*
+Matrix<T,Int>*
 Matrix<T,Int>::CloneEmpty() const
-{
-	return new Self;
-}
+{ return new Self; }
 
 template<typename Int>
 AutoMatrix<Int>*
@@ -473,7 +491,7 @@ AutoMatrix<Int>::Clone() const
 { vbs_(); }
 
 template<typename T,typename Int>
-AutoMatrix<Int>*
+Matrix<T,Int>*
 Matrix<T,Int>::Clone() const
 {
 	return new Self( *this );
@@ -755,7 +773,7 @@ AutoMatrix<Int>::GetDiagonal( Self& d, Int offset ) const
 {
 	PushCallStack( "AutoMatrix::GetDiagonal" );
 	AssertDataTypes( d );
-	if ( d.Viewing() && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
+	if ( d.viewing_ && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
         throw std::logic_error("d is not a column-vector of the right length");
     GetDiagonal_( d, offset );
 }
@@ -848,7 +866,7 @@ AutoMatrix<Int>::GetRealPartOfDiagonal
 {
 	PushCallStack("AutoMatrix::GetRealPartOfDiagonal");
 	AssertCRDataTypes( d );
-	if ( d.Viewing() && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
+	if ( d.viewing_ && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
         throw std::logic_error("d is not a column-vector of the right length");
     GetRealPartOfDiagonal_( d, offset );
 }
@@ -882,7 +900,7 @@ AutoMatrix<Int>::GetImagPartOfDiagonal
 {
 	PushCallStack("AutoMatrix::GetImagPartOfDiagonal");
 	AssertCRDataTypes( d );
-	if ( d.Viewing() && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
+	if ( d.viewing_ && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
         throw std::logic_error("d is not a column-vector of the right length");
     GetImagPartOfDiagonal_( d, offset );
 }
@@ -1050,7 +1068,7 @@ void AutoMatrix<Int>::CopyFrom_( const Self& A )
 {
     Int height = Height();
     Int width = Width();
-    if( !Viewing() )
+    if( !viewing_ )
         ResizeTo( A.Height(), A.Width() );
     const Int chunk = DataSize();
     height *= chunk;
@@ -1075,23 +1093,11 @@ AutoMatrix<Int>::CopyFrom( const Self& A )
     PushCallStack("AutoMatrix::CopyFrom");
     AssertDataTypes( A );
     AssertUnlocked();
-	if ( Viewing() && ( A.Height() != Height() || A.Width() != Width() ) )
+	if ( viewing_ && ( height_ != A.height_ || width_ != A.width_ ) )
 		throw std::logic_error
 			("Cannot assign to a view of different dimensions");
 	CopyFrom( A );			
     PopCallStack();
-}
-
-template<typename Int>
-void
-AutoMatrix<Int>::Empty()
-{
-    memory_.Empty();
-    height_ = 0;
-    width_ = 0;
-    ldim_ = 1;
-    data_ = 0;
-    locked_ = false;
 }
 
 //
@@ -1101,15 +1107,41 @@ AutoMatrix<Int>::Empty()
 
 template<typename Int>
 void
+AutoMatrix<Int>::Empty()
+{
+	Require( 0 );
+    height_ = 0;
+    width_ = 0;
+    ldim_ = 1;
+    data_ = 0;
+    viewing_ = false;
+    locked_ = false;
+}
+
+template <typename Int>
+void*
+AutoMatrix<Int>::Require( size_t numel )
+{ vbs_(); }
+
+template <typename T,typename Int>
+void*
+Matrix<T,Int>::Require( size_t numel )
+{
+	memory_.Require( numel );
+	return memory_.Buffer();
+}
+
+template<typename Int>
+void
 AutoMatrix<Int>::ResizeTo_( Int height, Int width, Int ldim )
 {
     // Only change the ldim when necessary. Simply 'shrink' our view if 
     // possible.
+	if ( !viewing_ )
+	    data_ = Require( ldim * width );
 	ldim_ = ldim;
     height_ = height;
     width_ = width;
-    memory_.Require(ldim_*width);
-    data_ = memory_.Buffer();
 }
 
 template<typename Int>
@@ -1128,7 +1160,7 @@ AutoMatrix<Int>::ResizeTo( Int height, Int width )
     PushCallStack("AutoMatrix::ResizeTo(height,width)");
     AssertNonnegative( height, "height" );
     AssertNonnegative( width, "width" );
-    if( Viewing() && ( height > height_ || width > width_ ) )
+    if( viewing_ && ( height > height_ || width > width_ ) )
         throw std::logic_error("Cannot increase the size of a view");
 	ResizeTo_( height, width );
     PopCallStack();
@@ -1141,9 +1173,11 @@ AutoMatrix<Int>::ResizeTo( Int height, Int width, Int ldim )
     PushCallStack("AutoMatrix::ResizeTo(height,width,ldim)");
     AssertNonnegative( height, "height" );
     AssertNonnegative( width, "width" );
-    if( Viewing() && ( height > height_ || width > width_ || ldim != ldim_ ) )
-        throw std::logic_error("Illogical ResizeTo on viewed data");
     AssertLDim( height, ldim );
+    if( viewing_ && ( height > height_ || width > width_ ) )
+        throw std::logic_error("Cannot increase the size of a view");
+    if( viewing_ && ldim != ldim_ )
+        throw std::logic_error("Cannot modify the ldim of a view");
     ResizeTo_( height, width, ldim );
     PopCallStack();
 }
@@ -1155,12 +1189,13 @@ void
 AutoMatrix<Int>::Attach_
 ( Int height, Int width, const void* buffer, Int ldim, bool locked, Int i, Int j )
 {
-   	Empty();
+	Require( 0 );
     height_ = height;
     width_  = width;
     ldim_   = ldim;
+    viewing_ = true;
     locked_ = locked;
-	data_   = static_cast<char*>(const_cast<void*>(buffer)) + ( i + ldim * j ) * memory_.Chunk();
+	data_    = static_cast<char*>(const_cast<void*>(buffer)) + ( i + ldim * j ) * dsize_;
 }
 
 template <typename Int>
@@ -1168,12 +1203,13 @@ void
 AutoMatrix<Int>::Attach__
 ( const Self& B, Int i, Int j, Int height, Int width, bool lock )
 { 
-   	Empty();
+	Require( 0 );
     height_ = height;
     width_  = width;
     ldim_   = B.ldim_;
+    viewing_ = true;
     locked_ = lock;
-	data_   = static_cast<char*>(B.data_) + ( i + B.ldim_ * j ) * B.DataSize();
+	data_    = static_cast<char*>(B.data_) + ( i + B.ldim_ * j ) * B.dsize_;
 }
 
 template<typename Int>
@@ -1218,85 +1254,73 @@ template <> MatrixTypes Matrix<Complex<double>,int>::DataType() const { return D
 // Explicit instantiations
 //
 
-#define Int int
-#define AM AutoMatrix<int>
+#define COMMA ,
+#define TEMPLATE_INST(T,M,I) \
+	template void View T ( M&, M& ); \
+	template void LockedView T ( M&, const M& ); \
+	template void View T ( M&, M&, I, I, I, I ); \
+	template void LockedView T ( M&, const M&, I, I, I, I ); \
+	template void View1x2 T ( M&, M&, M& ); \
+	template void LockedView1x2 T ( M&, const M&, const M& ); \
+	template void View2x1 T ( M&, M&, M& ); \
+	template void LockedView2x1 T ( M&, const M&, const M& ); \
+	template void View2x2 T ( M&, M&, M&, M&, M& ); \
+	template void LockedView2x2 T ( M&, const M&, const M&, const M&, const M& ); \
+	template void PartitionUp T ( M&, M&, M&, I ); \
+	template void LockedPartitionUp T ( const M&, M&, M&, I ); \
+	template void PartitionDown T ( M&, M&, M&, I ); \
+	template void LockedPartitionDown T ( const M&, M&, M&, I ); \
+	template void PartitionLeft T ( M&, M&, M&, I ); \
+	template void LockedPartitionLeft T ( const M&, M&, M&, I ); \
+	template void PartitionRight T ( M&, M&, M&, I ); \
+	template void LockedPartitionRight T ( const M&, M&, M&, I ); \
+	template void PartitionUpDiagonal T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedPartitionUpDiagonal T ( const M&, M&, M&, M&, M&, I ); \
+	template void PartitionUpLeftDiagonal T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedPartitionUpLeftDiagonal T ( const M&, M&, M&, M&, M&, I ); \
+	template void PartitionUpRightDiagonal T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedPartitionUpRightDiagonal T ( const M&, M&, M&, M&, M&, I ); \
+	template void PartitionDownDiagonal T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedPartitionDownDiagonal T ( const M&, M&, M&, M&, M&, I ); \
+	template void PartitionDownLeftDiagonal T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedPartitionDownLeftDiagonal T ( const M&, M&, M&, M&, M&, I ); \
+	template void PartitionDownRightDiagonal T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedPartitionDownRightDiagonal T ( const M&, M&, M&, M&, M&, I ); \
+	template void RepartitionUp T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedRepartitionUp T ( const M&, M&, M&, const M&, M&, I ); \
+	template void RepartitionDown T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedRepartitionDown T ( const M&, M&, M&, const M&, M&, I ); \
+	template void RepartitionLeft T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedRepartitionLeft T ( const M&, const M&, M&, M&, M&, I ); \
+	template void RepartitionRight T ( M&, M&, M&, M&, M&, I ); \
+	template void LockedRepartitionRight T ( const M&, const M&, M&, M&, M&, I ); \
+	template void RepartitionUpDiagonal T ( M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, I ); \
+	template void LockedRepartitionUpDiagonal T ( const M&, const M&, M&, M&, M&, M&, M&, M&, const M&, const M&, M&, M&, M&, I ); \
+	template void RepartitionDownDiagonal T ( M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, I ); \
+	template void LockedRepartitionDownDiagonal T ( const M&, const M&, M&, M&, M&, M&, M&, M&, const M&, const M&, M&, M&, M&, I ); \
+	template void SlidePartitionUp( M&, M&, M&, M&, M& ); \
+	template void SlideLockedPartitionUp( M&, const M&, const M&, M&, const M& ); \
+	template void SlidePartitionDown( M&, M&, M&, M&, M& ); \
+	template void SlideLockedPartitionDown( M&, const M&, const M&, M&, const M& ); \
+	template void SlidePartitionLeft( M&, M&, M&, M&, M& ); \
+	template void SlideLockedPartitionLeft( M&, M&, const M&, const M&, const M& ); \
+	template void SlidePartitionRight( M&, M&, M&, M&, M& ); \
+	template void SlideLockedPartitionRight( M&, M&, const M&, const M&, const M& ); \
+	template void SlidePartitionUpDiagonal( M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M& ); \
+	template void SlideLockedPartitionUpDiagonal( M&, M&, const M&, const M&, const M&, const M&, const M&, const M&, M&, M&, const M&, const M&, const M& ); \
+	template void SlidePartitionDownDiagonal( M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M& ); \
+	template void SlideLockedPartitionDownDiagonal( M&, M&, const M&, const M&, const M&, const M&, const M&, const M&, M&, M&, const M&, const M&, const M& );
+TEMPLATE_INST( <int>, AutoMatrix <int>, int )
 
-template void View<Int>( AM& A, AM& B );
-template void LockedView<Int>( AM& A, const AM& B );
-template void View<Int>( AM& A, AM& B, Int i, Int j, Int height, Int width );
-template void LockedView<Int>( AM& A, const AM& B, Int i, Int j, Int height, Int width );
-template void View1x2<Int>( AM& A, AM& BL, AM& BR );
-template void LockedView1x2<Int>( AM& A, const AM& BL, const AM& BR );
-template void View2x1<Int>( AM& A, AM& BT, AM& BB );
-template void LockedView2x1<Int>( AM& A, const AM& BT, const AM& BB );
-template void View2x2<Int>( AM& A, AM& BTL, AM& BTR, AM& BBL, AM& BBR );
-template void LockedView2x2<Int>( AM& A, const AM& BTL, const AM& BTR, const AM& BBL, const AM& BBR );
-
-#define T float
-#define M Matrix<float,int>
-
-template void View<T,Int>( M& A, M& B );
-template void LockedView<T,Int>( M& A, const M& B );
-template void View<T,Int>( M& A, M& B, Int i, Int j, Int height, Int width );
-template void LockedView<T,Int>( M& A, const M& B, Int i, Int j, Int height, Int width );
-template void View1x2<T,Int>( M& A, M& BL, M& BR );
-template void LockedView1x2<T,Int>( M& A, const M& BL, const M& BR );
-template void View2x1<T,Int>( M& A, M& BT, M& BB );
-template void LockedView2x1<T,Int>( M& A, const M& BT, const M& BB );
-template void View2x2<T,Int>( M& A, M& BTL, M& BTR, M& BBL, M& BBR );
-template void LockedView2x2<T,Int>( M& A, const M& BTL, const M& BTR, const M& BBL, const M& BBR );
-
-#undef T
-#undef M
-#define T double
-#define M Matrix<double,int>
-
-template void View<T,Int>( M& A, M& B );
-template void LockedView<T,Int>( M& A, const M& B );
-template void View<T,Int>( M& A, M& B, Int i, Int j, Int height, Int width );
-template void LockedView<T,Int>( M& A, const M& B, Int i, Int j, Int height, Int width );
-template void View1x2<T,Int>( M& A, M& BL, M& BR );
-template void LockedView1x2<T,Int>( M& A, const M& BL, const M& BR );
-template void View2x1<T,Int>( M& A, M& BT, M& BB );
-template void LockedView2x1<T,Int>( M& A, const M& BT, const M& BB );
-template void View2x2<T,Int>( M& A, M& BTL, M& BTR, M& BBL, M& BBR );
-template void LockedView2x2<T,Int>( M& A, const M& BTL, const M& BTR, const M& BBL, const M& BBR );
-
-#undef T
-#undef M
-#define T Complex<double>
-#define M Matrix<Complex<double>,int>
-
-template void View<T,Int>( M& A, M& B );
-template void LockedView<T,Int>( M& A, const M& B );
-template void View<T,Int>( M& A, M& B, Int i, Int j, Int height, Int width );
-template void LockedView<T,Int>( M& A, const M& B, Int i, Int j, Int height, Int width );
-template void View1x2<T,Int>( M& A, M& BL, M& BR );
-template void LockedView1x2<T,Int>( M& A, const M& BL, const M& BR );
-template void View2x1<T,Int>( M& A, M& BT, M& BB );
-template void LockedView2x1<T,Int>( M& A, const M& BT, const M& BB );
-template void View2x2<T,Int>( M& A, M& BTL, M& BTR, M& BBL, M& BBR );
-template void LockedView2x2<T,Int>( M& A, const M& BTL, const M& BTR, const M& BBL, const M& BBR );
-
-#undef T
-#undef M
-#define T Complex<float>
-#define M Matrix<Complex<float>,int>
-
-template void View<T,Int>( M& A, M& B );
-template void LockedView<T,Int>( M& A, const M& B );
-template void View<T,Int>( M& A, M& B, Int i, Int j, Int height, Int width );
-template void LockedView<T,Int>( M& A, const M& B, Int i, Int j, Int height, Int width );
-template void View1x2<T,Int>( M& A, M& BL, M& BR );
-template void LockedView1x2<T,Int>( M& A, const M& BL, const M& BR );
-template void View2x1<T,Int>( M& A, M& BT, M& BB );
-template void LockedView2x1<T,Int>( M& A, const M& BT, const M& BB );
-template void View2x2<T,Int>( M& A, M& BTL, M& BTR, M& BBL, M& BBR );
-template void LockedView2x2<T,Int>( M& A, const M& BTL, const M& BTR, const M& BBL, const M& BBR );
-
-#undef Int
-#undef AM
-#undef M
-#undef T
+#ifndef DISABLE_FLOAT
+TEMPLATE_INST( <float COMMA int>, Matrix <float COMMA int>, int )
+#endif
+TEMPLATE_INST( <double COMMA int>, Matrix <double COMMA int>, int )
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+TEMPLATE_INST( <Complex<float> COMMA int>, Matrix <Complex<float> COMMA int>, int )
+#endif
+TEMPLATE_INST( <Complex<double> COMMA int>, Matrix <Complex<double> COMMA int>, int )
+#endif
 
 } // namespace elem

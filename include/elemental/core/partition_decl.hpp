@@ -13,8 +13,8 @@
 namespace elem {
 
 // To make our life easier. Undef'd at the bottom of the header
-#define M Matrix<T,Int>
 #define AM AutoMatrix<Int>
+#define M Matrix<T,Int>
 #define DM DistMatrix<T,U,V,Int>
 
 //
