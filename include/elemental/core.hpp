@@ -86,6 +86,7 @@
 
 // Declare and implement the decoupled parts of the core of the library
 // (perhaps these should be moved into their own directory?)
+#include "elemental/core/matrix_impl.hpp"
 #include "elemental/core/view_impl.hpp"
 #include "elemental/core/partition_decl.hpp"
 #include "elemental/core/partition_impl.hpp"

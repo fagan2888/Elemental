@@ -34,6 +34,12 @@ template <typename Int> void AssertContiguous2x1(
 	const AutoMatrix<Int>& A1 );
 template <typename Int> void AssertContiguous1x2( 
 	const AutoMatrix<Int>& A0, const AutoMatrix<Int>& A1 );
+template <typename Int> void AssertContiguous3x1( 
+	const AutoMatrix<Int>& A0, 
+	const AutoMatrix<Int>& A1,
+	const AutoMatrix<Int>& A2 );
+template <typename Int> void AssertContiguous1x2( 
+	const AutoMatrix<Int>& A0, const AutoMatrix<Int>& A1, const AutoMatrix<Int>& A2 );
 template <typename Int> void AssertContiguous2x2( 
 	const AutoMatrix<Int>& A00, const AutoMatrix<Int>& A01,
 	const AutoMatrix<Int>& A10, const AutoMatrix<Int>& A11 );
@@ -103,7 +109,6 @@ public:
     Int DiagonalLength( Int offset=0 ) const;
     Int LDim() const;
     Int DataSize() const;
-    Int MemorySize() const;
     virtual MatrixTypes DataType() const;
     bool Viewing() const;
     bool Locked() const;
@@ -150,7 +155,7 @@ public:
     //
 
 	virtual void CopyFrom( const Self& A );
-    Self& operator=( const Self& A );
+    const Self& operator=( const Self& A );
 
     void Empty();
     void ResizeTo( Int height, Int width );
@@ -159,9 +164,9 @@ public:
 	void LockedAttach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim );
     
 protected:
-	AutoMatrix( size_t dsize );
 	// Use this constructor with internally managed data.
-	AutoMatrix( size_t dsize, void* data, Int height, Int width, Int ldim );
+	AutoMatrix( size_t dsize );
+	void Setup_( void* data, Int height, Int width, Int ldim );
 	// Use these constructors for extrenally managed data.
 	AutoMatrix( size_t dsize, Int height, Int width, void* data, Int ldim );
 	AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim );
@@ -215,7 +220,7 @@ protected:
 	void Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     void Attach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     
-    void* Require( size_t numel ); // = 0;
+    virtual void* Require( size_t numel ); // = 0;
     
     //
     // By making this one function public that really should not be, we avoid having to
@@ -265,6 +270,7 @@ public:
     //
 
     MatrixTypes DataType() const;
+    size_t MemorySize() const;
 
     T* Buffer();
     T* Buffer( Int i, Int j );
@@ -275,6 +281,7 @@ public:
     // I/O
     //
 
+    void Print( std::string msg="" );
     void Print( std::ostream& os, std::string msg="" ) const;
 
     //
@@ -322,7 +329,7 @@ public:
     // Utilities
     //
 
-    Self& operator=( Self& A );
+    const Self& operator=( const Self& A );
     
     // Not sure why I can't protect these. Don't use them.
     
@@ -336,6 +343,11 @@ public:
 protected:
 
 	friend class AutoMatrix<Int>;
+	
+    T* Buffer_();
+    T* Buffer_( Int i, Int j );
+    const T* LockedBuffer_() const;
+    const T* LockedBuffer_( Int i, Int j ) const;
 	
     // Only valid for complex data
 	RT GetImagPart_( Int i, Int j ) const;
@@ -367,7 +379,7 @@ protected:
     void UpdateImagPartOfDiagonal_( const Parent& d, Int offset );
     
 private:    
-	Memory<T,Int> memory_;
+	Memory<T> memory_;
 	void* Require( size_t numel );
 };
 

@@ -12,40 +12,36 @@
 
 namespace elem {
 
-template <typename Int>
+template<typename G>
 inline 
-AutoMemory<Int>::AutoMemory( std::size_t chunk )
-: chunk_(chunk), size_(0), buffer_(0)
+Memory<G>::Memory()
+: size_(0), buffer_(NULL)
 { }
 
-template <typename Int>
+template<typename G>
 inline 
-AutoMemory<Int>::~AutoMemory()
+Memory<G>::Memory( std::size_t size )
+: size_(size), buffer_(new G[size])
+{ }
+
+template<typename G>
+inline 
+Memory<G>::~Memory()
 { delete[] buffer_; }
 
-template <typename Int>
-inline char* 
-AutoMemory<Int>::Buffer() const
+template<typename G>
+inline G* 
+Memory<G>::Buffer() const
 { return buffer_; }
 
-template <typename Int>
-inline char*
-AutoMemory<Int>::Buffer( Int i ) const
-{ return buffer_ + i * chunk_; }
-
-template <typename Int>
-inline size_t
-AutoMemory<Int>::Chunk() const
-{ return chunk_; }
-
-template <typename Int>
+template<typename G>
 inline std::size_t 
-AutoMemory<Int>::Size() const
+Memory<G>::Size() const
 { return size_; }
 
-template <typename Int>
-inline char* 
-AutoMemory<Int>::Require( std::size_t size )
+template<typename G>
+inline void 
+Memory<G>::Require( std::size_t size )
 {
     if( size > size_ )
     {
@@ -53,54 +49,39 @@ AutoMemory<Int>::Require( std::size_t size )
 #ifndef RELEASE
         try {
 #endif
-        buffer_ = new char[chunk_*size];
+        buffer_ = new G[size];
 #ifndef RELEASE
         } 
         catch( std::bad_alloc& exception )
         {
-            std::cerr << "Failed to allocate " << size*chunk_
+            std::cerr << "Failed to allocate " << size*sizeof(G) 
                       << " bytes" << std::endl;
             throw exception;
         }
 #endif
         size_ = size;
     }
-    return buffer_;
 }
 
-template <typename Int>
+template<typename G>
 inline void 
-AutoMemory<Int>::Release()
+Memory<G>::Release()
 {
-#ifndef POOL_AutoMemory
+#ifndef POOL_MEMORY
     this->Empty();
 #endif
 }
 
-template <typename Int>
+template<typename G>
 inline void 
-AutoMemory<Int>::Empty()
+Memory<G>::Empty()
 {
     delete[] buffer_;
     size_ = 0;
     buffer_ = 0;
 }
 
-template <typename T,typename Int>
-Memory<T,Int>::Memory()
-: AutoMemory<Int>( sizeof(T) )
-{}
-
-template <typename T,typename Int>
-T*
-Memory<T,Int>::Buffer() const
-{ return static_cast<T*>( static_cast<void*>(AutoMemory<Int>::Buffer()) ); }
-
-template <typename T,typename Int>
-T*
-Memory<T,Int>::Buffer( Int i ) const
-{ return Buffer() + i; }
-
 } // namespace elem
 
 #endif // ifndef CORE_MEMORY_IMPL_HPP
+

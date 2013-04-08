@@ -19,8 +19,10 @@ namespace elem {
 // be called, so this exception should never occur.
 //
 
-static void vbs_() { 
-	throw std::logic_error( "Unexpected call to virtual base class" ); 
+static void vbs_( const char* s ) { 
+	std::ostringstream msg;
+	msg << "Unexpected call to virtual base class: " << s;
+	throw std::logic_error( msg.str() ); 
 }
 
 //
@@ -114,7 +116,19 @@ void AssertContiguous1x2( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B )
     if( A.LDim() != B.LDim() )
         throw std::logic_error("1x2 must have consistent ldims");
     if( A.LockedBuffer_(0,A.Width()) != B.LockedBuffer_() )
-        throw std::logic_error("2x1 must have contiguous memory");
+        throw std::logic_error("1x2 must have contiguous memory");
+}
+
+template <typename Int>
+void AssertContiguous1x3( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B, const AutoMatrix<Int>& C )
+{
+    if( A.Height() != B.Height() || A.Height() != C.Height() )
+        throw std::logic_error("1x3 must have consistent heights");
+    if( A.LDim() != B.LDim() || A.LDim() != C.LDim() )
+        throw std::logic_error("1x3 must have consistent ldims");
+    if( A.LockedBuffer_(0,A.Width()) != B.LockedBuffer_() ||
+        B.LockedBuffer_(0,B.Width()) != C.LockedBuffer_() )
+        throw std::logic_error("1x3 must have contiguous memory");
 }
 
 template <typename Int>
@@ -126,6 +140,18 @@ void AssertContiguous2x1( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B )
         throw std::logic_error("2x1 must have consistent ldims");
     if( A.LockedBuffer_(A.Height(),0) != B.LockedBuffer() )
         throw std::logic_error("2x1 must have contiguous memory");
+}
+
+template <typename Int>
+void AssertContiguous3x1( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B, const AutoMatrix<Int>& C )
+{
+    if( A.Width() != B.Width() || A.Width() != C.Width() )
+        throw std::logic_error("3x1 must have consistent widths");
+    if( A.LDim() != B.LDim() || A.LDim() != C.LDim() )
+        throw std::logic_error("3x1 must have consistent ldims");
+    if( A.LockedBuffer_(A.Height(),0) != B.LockedBuffer() ||
+        B.LockedBuffer_(B.Height(),0) != C.LockedBuffer() )
+        throw std::logic_error("3x1 must have contiguous memory");
 }
 
 template <typename Int>
@@ -281,39 +307,46 @@ static void AssertBuffer( const T* buffer )
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize )
-: dsize_(dsize), height_(0), width_(0), ldim_(1),
-  viewing_(false), locked_(false),
-  data_(0)
+: dsize_(dsize)
 {}
 
 template<typename Int>
-AutoMatrix<Int>::AutoMatrix( size_t dsize, void* data, Int height, Int width, Int ldim )
-: dsize_(dsize_), height_(height), width_(width), ldim_(std::max(ldim,std::max(height,1))),
-  viewing_(false), locked_(false),
-  data_(data)
-{}
+void AutoMatrix<Int>::Setup_( void* data, Int height, Int width, Int ldim )
+{
+	height_  = height;
+	width_   = width;
+	ldim_    = ldim;
+	viewing_ = false;
+	locked_  = false;
+	data_    = data;
+}
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( Int height, Int width )
-: AutoMatrix<Int>( sizeof(T), memory_.Require( height * width ), height, width, height )
+: AutoMatrix<Int>( sizeof(T) )
 { 
+	Int ldim = std::max( height, 1 );
 #ifndef RELEASE
-	AssertDimensions( height, width, std::max( height, 1 ) );
+	AssertDimensions( height, width, ldim );
 #endif
+	memory_.Require( ldim * width );
+	Parent::Setup_( memory_.Buffer(), height, width, ldim);
 }
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( Int height, Int width, Int ldim )
-: AutoMatrix<Int>( sizeof(T), memory_.Require( ldim * width ), height, width, ldim )
+: AutoMatrix<Int>( sizeof(T) )
 { 
 #ifndef RELEASE
 	AssertDimensions( height, width, ldim );
 #endif
+	memory_.Require( ldim * width );
+	Parent::Setup_( memory_.Buffer(), height, width, ldim);
 }
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, void* data, Int ldim )
-: dsize_(dsize_), height_(height), width_(width), ldim_(std::max(ldim,1)),
+: dsize_(dsize), height_(height), width_(width), ldim_(std::max(ldim,1)),
   viewing_(true), locked_(false),
   data_(data)
 {}
@@ -476,9 +509,7 @@ Matrix<T,Int>::Matrix( const Self& A )
 template<typename Int>
 AutoMatrix<Int>*
 AutoMatrix<Int>::CloneEmpty() const
-{ 
-	vbs_(); 
-}
+{ vbs_( "CloneEmpty" ); return 0; }
 
 template<typename T,typename Int>
 Matrix<T,Int>*
@@ -488,7 +519,7 @@ Matrix<T,Int>::CloneEmpty() const
 template<typename Int>
 AutoMatrix<Int>*
 AutoMatrix<Int>::Clone() const
-{ vbs_(); }
+{ vbs_( "Clone" ); return 0; }
 
 template<typename T,typename Int>
 Matrix<T,Int>*
@@ -584,7 +615,7 @@ Matrix<T,Int>::Print( std::ostream& os, const std::string msg ) const
 template <typename Int>
 void
 AutoMatrix<Int>::Get_( Int, Int, void* ) const
-{ vbs_(); }
+{ vbs_( "Get_" ); }
 
 template<typename T,typename Int>
 void
@@ -603,7 +634,7 @@ AutoMatrix<Int>::Get( MatrixTypes dtype, Int i, Int j, void* dst ) const
 template <typename Int>
 void
 AutoMatrix<Int>::Set_( Int, Int, const void* )
-{ vbs_(); }
+{ vbs_( "Set_" ); }
 
 template<typename T,typename Int>
 void
@@ -623,7 +654,7 @@ AutoMatrix<Int>::Set( MatrixTypes dtype, Int i, Int j, const void* dst )
 template <typename Int>
 void
 AutoMatrix<Int>::Update_( Int, Int, const void* )
-{ vbs_(); }
+{ vbs_( "Update_" ); }
 
 template<typename T,typename Int>
 void
@@ -643,7 +674,7 @@ AutoMatrix<Int>::Update( MatrixTypes dtype, Int i, Int j, const void* dst )
 template <typename Int>
 void 
 AutoMatrix<Int>::GetRealPart_( Int i, Int j, void* ans ) const
-{ vbs_(); }
+{ vbs_( "GetRealPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -662,7 +693,7 @@ AutoMatrix<Int>::GetRealPart( MatrixTypes dtype, Int i, Int j, void* dst ) const
 template <typename Int>
 void 
 AutoMatrix<Int>::SetRealPart_( Int i, Int j, const void* ans )
-{ vbs_(); }
+{ vbs_( "SetRealPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -684,7 +715,7 @@ AutoMatrix<Int>::SetRealPart( MatrixTypes dtype, Int i, Int j, const void* dst )
 template <typename Int>
 void 
 AutoMatrix<Int>::UpdateRealPart_( Int i, Int j, const void* ans )
-{ vbs_(); }
+{ vbs_( "UpdateRealPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -707,7 +738,7 @@ AutoMatrix<Int>::UpdateRealPart( MatrixTypes dtype, Int i, Int j, const void* ds
 template <typename Int>
 void 
 AutoMatrix<Int>::GetImagPart_( Int i, Int j, void* ans ) const
-{ vbs_(); }
+{ vbs_( "GetImagPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -726,7 +757,7 @@ AutoMatrix<Int>::GetImagPart( MatrixTypes dtype, Int i, Int j, void* dst ) const
 template <typename Int>
 void 
 AutoMatrix<Int>::SetImagPart_( Int i, Int j, const void* ans )
-{ vbs_(); }
+{ vbs_( "SetImagPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -746,7 +777,7 @@ AutoMatrix<Int>::SetImagPart( MatrixTypes dtype, Int i, Int j, const void* dst )
 template <typename Int>
 void 
 AutoMatrix<Int>::UpdateImagPart_( Int i, Int j, const void* ans )
-{ vbs_(); }
+{ vbs_( "UpdateImagPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -781,7 +812,7 @@ AutoMatrix<Int>::GetDiagonal( Self& d, Int offset ) const
 template <typename Int>
 void
 AutoMatrix<Int>::GetDiagonal_( Self& d, Int offset ) const
-{ vbs_(); }
+{ vbs_( "GetDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -813,7 +844,7 @@ AutoMatrix<Int>::SetDiagonal( const Self& d, Int offset )
 template <typename Int>
 void
 AutoMatrix<Int>::SetDiagonal_( const Self& d, Int offset )
-{ vbs_(); }
+{ vbs_( "SetDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -843,7 +874,7 @@ AutoMatrix<Int>::UpdateDiagonal( const AutoMatrix<Int>& d, Int offset )
 template <typename Int>
 void
 AutoMatrix<Int>::UpdateDiagonal_( const Self& d, Int offset )
-{ vbs_(); }
+{ vbs_( "UpdateDiagonal_" ); }
 
 template <typename T,typename Int>
 void
@@ -874,14 +905,14 @@ AutoMatrix<Int>::GetRealPartOfDiagonal
 template <typename Int>
 void
 AutoMatrix<Int>::GetRealPartOfDiagonal_( Self& d, Int offset ) const
-{ vbs_(); }
+{ vbs_( "GetRealPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
 Matrix<T,Int>::GetRealPartOfDiagonal_
 ( AutoMatrix<Int>& dd, Int offset ) const
 { 
-	RSelf& d = static_cast<RSelf&>(d);
+	RSelf& d = static_cast<RSelf&>(dd);
     const Int diagLength = Parent::DiagonalLength(offset);
     if( !d.Viewing() )    
         d.ResizeTo( diagLength, 1 );
@@ -908,7 +939,7 @@ AutoMatrix<Int>::GetImagPartOfDiagonal
 template <typename Int>
 void
 AutoMatrix<Int>::GetImagPartOfDiagonal_( Self& d, Int offset ) const
-{ vbs_(); }
+{ vbs_( "GetImagPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -943,7 +974,7 @@ AutoMatrix<Int>::SetRealPartOfDiagonal
 template <typename Int>
 void
 AutoMatrix<Int>::SetRealPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_(); }
+{ vbs_( "SetRealPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -976,7 +1007,7 @@ AutoMatrix<Int>::SetImagPartOfDiagonal
 template <typename Int>
 void
 AutoMatrix<Int>::SetImagPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_(); }
+{ vbs_( "SetImagPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -1009,7 +1040,7 @@ AutoMatrix<Int>::UpdateRealPartOfDiagonal
 template <typename Int>
 void
 AutoMatrix<Int>::UpdateRealPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_(); }
+{ vbs_( "UpdateRealPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -1042,7 +1073,7 @@ AutoMatrix<Int>::UpdateImagPartOfDiagonal
 template <typename Int>
 void
 AutoMatrix<Int>::UpdateImagPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_(); }
+{ vbs_( "UpdateImagPartOfDiagional_" ); }
 
 template<typename T,typename Int>
 void
@@ -1121,7 +1152,10 @@ AutoMatrix<Int>::Empty()
 template <typename Int>
 void*
 AutoMatrix<Int>::Require( size_t numel )
-{ vbs_(); }
+{ 
+	vbs_( "Require" ); 
+	return 0;
+}
 
 template <typename T,typename Int>
 void*
@@ -1190,11 +1224,11 @@ AutoMatrix<Int>::Attach_
 ( Int height, Int width, const void* buffer, Int ldim, bool locked, Int i, Int j )
 {
 	Require( 0 );
-    height_ = height;
-    width_  = width;
-    ldim_   = ldim;
+    height_  = height;
+    width_   = width;
+    ldim_    = ldim;
     viewing_ = true;
-    locked_ = locked;
+    locked_  = locked;
 	data_    = static_cast<char*>(const_cast<void*>(buffer)) + ( i + ldim * j ) * dsize_;
 }
 
@@ -1204,11 +1238,11 @@ AutoMatrix<Int>::Attach__
 ( const Self& B, Int i, Int j, Int height, Int width, bool lock )
 { 
 	Require( 0 );
-    height_ = height;
-    width_  = width;
-    ldim_   = B.ldim_;
+    height_  = height;
+    width_   = width;
+    ldim_    = B.ldim_;
     viewing_ = true;
-    locked_ = lock;
+    locked_  = lock;
 	data_    = static_cast<char*>(B.data_) + ( i + B.ldim_ * j ) * B.dsize_;
 }
 
@@ -1232,20 +1266,15 @@ AutoMatrix<Int>::Attach
 
 template class AutoMatrix<int>;
 template class Matrix<int,int>;
-template <> MatrixTypes Matrix<int,int>::DataType() const { return Integral; }
 #ifndef DISABLE_FLOAT
 template class Matrix<float,int>;
-template <> MatrixTypes Matrix<float,int>::DataType() const { return Float; }
 #endif // ifndef DISABLE_FLOAT
 template class Matrix<double,int>;
-template <> MatrixTypes Matrix<double,int>::DataType() const { return Double; }
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT
 template class Matrix<Complex<float>,int>;
-template <> MatrixTypes Matrix<Complex<float>,int>::DataType() const { return FComplex; }
 #endif // ifndef DISABLE_FLOAT
 template class Matrix<Complex<double>,int>;
-template <> MatrixTypes Matrix<Complex<double>,int>::DataType() const { return DComplex; }
 #endif // ifndef DISABLE_COMPLEX
 
 // To make our life easier. Undef'd at the bottom of the header

@@ -26,6 +26,23 @@
 
 namespace elem {
 
+template <> inline
+MatrixTypes Matrix<int,int>::DataType() const { return Integral; }
+#ifndef DISABLE_FLOAT
+template <> MatrixTypes inline
+Matrix<float,int>::DataType() const { return Float; }
+#endif // ifndef DISABLE_FLOAT
+template <> MatrixTypes inline
+Matrix<double,int>::DataType() const { return Double; }
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+template <> MatrixTypes inline
+Matrix<Complex<float>,int>::DataType() const { return FComplex; }
+#endif // ifndef DISABLE_FLOAT
+template <> MatrixTypes inline
+Matrix<Complex<double>,int>::DataType() const { return DComplex; }
+#endif // ifndef DISABLE_COMPLEX
+
 template<typename Int> inline
 Int AutoMatrix<Int>::Height() const
 { return height_;  }
@@ -71,16 +88,28 @@ void* AutoMatrix<Int>::Buffer_()
 { return data_; }
 
 template <typename T,typename Int> inline
+T* Matrix<T,Int>::Buffer_()
+{ return static_cast<T*>(Parent::Buffer_()); }
+
+template <typename T,typename Int> inline
 T* Matrix<T,Int>::Buffer()
-{ return static_cast<T*>(PARENT(Buffer)()); }
+{ return static_cast<T*>(RPARENT(Buffer)()); }
 
 template<typename Int> inline
-const void* AutoMatrix<Int>::LockedBuffer() const
+const void* AutoMatrix<Int>::LockedBuffer_() const
 { return data_; }
 
 template <typename T,typename Int> inline
+const T* Matrix<T,Int>::LockedBuffer_() const
+{ return static_cast<const T*>(Parent::LockedBuffer_()); }
+
+template <typename Int> inline
+const void* AutoMatrix<Int>::LockedBuffer() const
+{ return LockedBuffer_(); }
+
+template <typename T,typename Int> inline
 const T* Matrix<T,Int>::LockedBuffer() const
-{ return static_cast<const T*>(Parent::LockedBuffer()); }
+{ return LockedBuffer_(); }
 
 template<typename Int> inline
 void* AutoMatrix<Int>::Buffer_( Int i, Int j )
@@ -90,6 +119,10 @@ template<typename T,typename Int> inline
 T* Matrix<T,Int>::Buffer_( Int i, Int j )
 { return static_cast<T*>(Parent::Buffer_()) + ( i + j * Parent::LDim() ); }
 
+template <typename T,typename Int> inline
+T* Matrix<T,Int>::Buffer( Int i, Int j ) 
+{ return static_cast<T*>(RPARENT(Buffer)(i,j)); }
+
 template <typename Int> inline
 const void* AutoMatrix<Int>::LockedBuffer_( Int i, Int j ) const
 { return static_cast<const char*>(data_) + ( i + j * ldim_ ) * dsize_; }
@@ -98,17 +131,21 @@ template<typename T,typename Int> inline
 const T* Matrix<T,Int>::LockedBuffer_( Int i, Int j ) const
 { return static_cast<const T*>(Parent::LockedBuffer_()) + ( i + j * Parent::LDim() ); }
 
-template <class Int> inline
-void AutoMatrix<Int>::Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
-{ Attach_( height, width, buffer, ldim, false, 0, 0 ); }
-
-template <typename T,typename Int> inline
-T* Matrix<T,Int>::Buffer( Int i, Int j ) 
-{ return static_cast<T*>(RPARENT(Buffer)(i,j)); }
-
 template <typename T,typename Int> inline
 const T* Matrix<T,Int>::LockedBuffer( Int i, Int j ) const
 { return static_cast<const T*>(RPARENT(LockedBuffer)(i,j)); }
+
+template <typename Int> inline
+void AutoMatrix<Int>::Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
+{ Attach_( height, width, buffer, ldim, false, 0, 0 ); }
+
+template <typename Int> inline
+void AutoMatrix<Int>::Print( std::string msg )
+{ return Print( std::cout, msg ); }
+
+template <typename T,typename Int> inline
+void Matrix<T,Int>::Print( std::string msg )
+{ return Print( std::cout, msg ); }
 
 //
 // Individual element manipulation
