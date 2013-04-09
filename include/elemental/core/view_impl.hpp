@@ -175,7 +175,7 @@ void View_( AM& A, const AM& B, Int i, Int j, Int height, Int width, bool lock )
 	if ( !lock ) 
 		B.AssertUnlocked( AM::ViewLock );
 	B.AssertView( i, j, height, width );
-    View__( A, B, i, j, height, width, false );
+    View__( A, B, i, j, height, width, lock );
     PopCallStack();
 }
 
@@ -449,7 +449,7 @@ void View2x1_( AM& A, const AM& BT, const AM& BB, bool lock )
     PopCallStack();
 }
 
-template<typename T,typename Int>
+template<typename Int>
 inline void View2x1
 ( AM& A,
   AM& BT,

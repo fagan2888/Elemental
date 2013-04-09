@@ -28,7 +28,7 @@ enum MatrixTypes {
 };
 
 template <typename Int> 
-void AssertNonnegative( Int i, const char* s );
+	void AssertNonnegative( Int i, const char* s );
 template <typename Int> void AssertContiguous2x1( 
 	const AutoMatrix<Int>& A0, 
 	const AutoMatrix<Int>& A1 );
@@ -60,7 +60,9 @@ public:
 	//
 	
     void AssertBounds( Int i, Int j ) const;
+    void AssertDataTypes( MatrixTypes B, bool unknown_ok = false ) const;
     void AssertDataTypes( const Self& B, bool unknown_ok = false ) const;
+    void AssertCRDataTypes( MatrixTypes B, bool unknown_ok = false ) const;
     void AssertCRDataTypes( const Self& B, bool imag_bad = false ) const;
     void AssertView( Int i, Int j, Int height, Int width ) const;
     enum LockTypes { ViewLock, PartitionLock, MiscLock };
@@ -91,8 +93,8 @@ public:
 	// Implemented by derived classes
     // static Self* Create( Int height, Int width, T* buffer, Int ldim );
     // static Self* Create( Int height, Int width, const T* buffer, Int ldim );
-	virtual Self* CloneEmpty() const; // = 0;
-	virtual Self* Clone() const; // = 0;
+	virtual Self* CloneEmpty() const = 0;
+	virtual Self* Clone() const = 0;
 	
     //
     // Destructor
@@ -124,12 +126,12 @@ public:
     //
     
     virtual void Print( std::ostream& os, std::string msg="" ) const;
-    void Print( std::string msg="" );
+    void Print( std::string msg="" ) const;
     
     //
     // Entry manipulation
     //
-
+    
 	void Get( MatrixTypes type, Int i, Int j, void* dst ) const;
 	void Set( MatrixTypes type, Int i, Int j, const void* src );
 	void Update( MatrixTypes type, Int i, Int j, const void* src );
@@ -157,11 +159,11 @@ public:
 	virtual void CopyFrom( const Self& A );
     const Self& operator=( const Self& A );
 
-    void Empty();
     void ResizeTo( Int height, Int width );
     void ResizeTo( Int height, Int width, Int ldim );
 	void Attach( MatrixTypes dtype, Int height, Int width, void* buffer, Int ldim );
 	void LockedAttach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim );
+    virtual void Empty() = 0;
     
 protected:
 	// Use this constructor with internally managed data.
@@ -181,25 +183,25 @@ protected:
     // these itself as well, for consistency.
     //
     
-	virtual void Get_( Int i, Int j, void* dst ) const; // = 0;
-	virtual void Set_( Int i, Int j, const void* src ); // = 0;
-	virtual void Update_( Int i, Int j, const void* src ); // = 0;
-    virtual void GetRealPart_( Int i, Int j, void* dst ) const; // = 0;
-    virtual void SetRealPart_( Int i, Int j, const void* src ); // = 0;
-    virtual void UpdateRealPart_( Int i, Int j, const void* src ); // = 0;
-    virtual void GetImagPart_( Int i, Int j, void* st ) const; // = 0;
-    virtual void SetImagPart_( Int i, Int j, const void* src ); // = 0;
-    virtual void UpdateImagPart_( Int i, Int j, const void* src ); // = 0;
+	virtual void Get_( Int i, Int j, void* dst ) const = 0;
+	virtual void Set_( Int i, Int j, const void* src ) = 0;
+	virtual void Update_( Int i, Int j, const void* src ) = 0;
+    virtual void GetRealPart_( Int i, Int j, void* dst ) const = 0;
+    virtual void SetRealPart_( Int i, Int j, const void* src ) = 0;
+    virtual void UpdateRealPart_( Int i, Int j, const void* src ) = 0;
+    virtual void GetImagPart_( Int i, Int j, void* st ) const = 0;
+    virtual void SetImagPart_( Int i, Int j, const void* src ) = 0;
+    virtual void UpdateImagPart_( Int i, Int j, const void* src ) = 0;
     
-    virtual void GetDiagonal_( Self& d, Int offset ) const; // = 0;
-    virtual void SetDiagonal_( const Self& d, Int offset ); // = 0;
-    virtual void UpdateDiagonal_( const Self& d, Int offset ); // = 0;
-    virtual void GetRealPartOfDiagonal_( Self& d, Int offset ) const; // = 0;
-    virtual void SetRealPartOfDiagonal_( const Self& d, Int offset ); // = 0;
-    virtual void UpdateRealPartOfDiagonal_( const Self& d, Int offset ); // = 0;
-    virtual void GetImagPartOfDiagonal_( Self& d, Int offset ) const; // = 0;
-    virtual void SetImagPartOfDiagonal_( const Self& d, Int offset ); // = 0;
-    virtual void UpdateImagPartOfDiagonal_( const Self& d, Int offset ); // = 0;
+    virtual void GetDiagonal_( Self& d, Int offset ) const = 0;
+    virtual void SetDiagonal_( const Self& d, Int offset ) = 0;
+    virtual void UpdateDiagonal_( const Self& d, Int offset ) = 0;
+    virtual void GetRealPartOfDiagonal_( Self& d, Int offset ) const = 0;
+    virtual void SetRealPartOfDiagonal_( const Self& d, Int offset ) = 0;
+    virtual void UpdateRealPartOfDiagonal_( const Self& d, Int offset ) = 0;
+    virtual void GetImagPartOfDiagonal_( Self& d, Int offset ) const = 0;
+    virtual void SetImagPartOfDiagonal_( const Self& d, Int offset ) = 0;
+    virtual void UpdateImagPartOfDiagonal_( const Self& d, Int offset ) = 0;
 
     //
     // The protected, underscored version of these methods bypass all consistency 
@@ -220,7 +222,7 @@ protected:
 	void Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     void Attach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     
-    virtual void* Require( size_t numel ); // = 0;
+    virtual void* Require( size_t numel ) = 0;
     
     //
     // By making this one function public that really should not be, we avoid having to
@@ -281,7 +283,7 @@ public:
     // I/O
     //
 
-    void Print( std::string msg="" );
+    void Print( std::string msg="" ) const;
     void Print( std::ostream& os, std::string msg="" ) const;
 
     //
@@ -324,6 +326,7 @@ public:
 
     void Attach( Int height, Int width, T* buffer, Int ldim );
     void LockedAttach( Int height, Int width, const T* buffer, Int ldim );
+	void Empty();
 
     //
     // Utilities

@@ -545,7 +545,7 @@ RepartitionUpDiagonal_
     	ABR.AssertUnlocked( AM::PartitionLock );
     }
     AssertContiguous2x2( ATL, ATR, ABL, ABR );
-    RepartitionUpDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A21, A21, A22, bsize, lock );
+    RepartitionUpDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, bsize, lock );
     PopCallStack();
 }
 
@@ -709,7 +709,7 @@ RepartitionDownDiagonal_
     	ABR.AssertUnlocked( AM::PartitionLock );
     }
     AssertContiguous2x2( ATL, ATR, ABL, ABR );
-    RepartitionDownDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A21, A21, A22, bsize, lock );
+    RepartitionDownDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, bsize, lock );
     PopCallStack();
 }
 

@@ -46,8 +46,9 @@ SlidePartitionUp__
           const AM& A1,
   AM& AB, const AM& A2, bool lock )
 {
-    View__( AT, A0, lock );
-    View2x1__( AB, A1, A2, lock );
+    View__(    AT, A0, lock );
+    View2x1__( AB, A1, 
+                   A2, lock );
 }
 
 template<typename Int>
@@ -152,8 +153,9 @@ SlidePartitionDown__
           const AM& A1,
   AM& AB, const AM& A2, bool lock )
 {
-    View2x1__( AT, A0, A1, lock );
-    View__( AB, A2, lock );
+    View2x1__( AT, A0, 
+                   A1, lock );
+    View__(    AB, A2, lock );
 }
 
 template<typename Int>
@@ -257,8 +259,8 @@ SlidePartitionLeft__
 ( AM& AL, AM& AR,
   const AM& A0, const AM& A1, const AM& A2, bool lock )
 {
-    View__( AL, A0, lock );
-    View1x2__( AR, A1, A2, lock );
+    View__(    AL, A0,         lock );
+    View1x2__( AR,     A1, A2, lock );
 }
 
 template<typename Int>
@@ -353,8 +355,8 @@ SlidePartitionRight__
 ( AM& AL, AM& AR,
   const AM& A0, const AM& A1, const AM& A2, bool lock )
 {
-    View1x2__( AL, A0, A1, lock );
-    View__( AR, A2, lock );
+    View1x2__( AL, A0, A1,     lock );
+    View__(    AR,         A2, lock );
 }
 
 template<typename Int>
@@ -450,12 +452,12 @@ SlidePartitionUpDiagonal__
                     const AM& A10, const AM& A11, const AM& A12,
   AM& ABL, AM& ABR, const AM& A20, const AM& A21, const AM& A22, bool lock )
 {
-    View__( ATL, A00, lock );
-    View1x2__( ATR, A01, A02, lock );
+    View__(    ATL, A00,           lock );
+    View1x2__( ATR,      A01, A02, lock );
     View2x1__( ABL, A10,
                     A20, lock );
-    View2x2__( ABR, A11, A12,
-                    A21, A22, lock );
+    View2x2__( ABR,      A11, A12,
+                         A21, A22, lock );
 }
 
 template<typename Int>
@@ -490,6 +492,7 @@ SlidePartitionUpDiagonal_
     	A22.AssertUnlocked( AM::PartitionLock );
     }
     AssertContiguous3x3( A00, A01, A02, A10, A11, A12, A20, A21, A22 );
+	SlidePartitionUpDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, lock );
     PopCallStack();
 }
 
@@ -579,11 +582,11 @@ SlidePartitionDownDiagonal__
   AM& ABL, AM& ABR, const AM& A20, const AM& A21, const AM& A22, bool lock )
 {
     View2x2__( ATL, A00, A01,
-                    A10, A11, lock );
-    View2x1__( ATR, A02,
-                    A12, lock );
-    View1x2__( ABL, A20, A21, lock );
-    View__( ABR, A22, lock );
+                    A10, A11,      lock );
+    View2x1__( ATR,           A02,
+                              A12, lock );
+    View1x2__( ABL, A20, A21,      lock );
+    View__(    ABR,           A22, lock );
 }
 
 template<typename Int>
@@ -618,6 +621,7 @@ SlidePartitionDownDiagonal_
     	A22.AssertUnlocked( AM::PartitionLock );
     }
     AssertContiguous3x3( A00, A01, A02, A10, A11, A12, A20, A21, A22 );
+    SlidePartitionDownDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, lock );
     PopCallStack();
 }
 

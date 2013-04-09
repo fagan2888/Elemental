@@ -194,8 +194,8 @@ template <typename R>       R& SReal_(               R & a ) { return a; }
 template <typename R>       R& SReal_(       Complex<R>& a ) { return a.real; }
 
 template <typename R> const R& GImag_( const         R & a ) { return a; }
-template <typename R> const R& GImag_( const Complex<R>& a ) { return a.real; }
-template <typename R>       R& SImag_(       Complex<R>& a ) { return a.real; }
+template <typename R> const R& GImag_( const Complex<R>& a ) { return a.imag; }
+template <typename R>       R& SImag_(       Complex<R>& a ) { return a.imag; }
 template <typename R>       R& SImag_(               R & a )
 { throw std::logic_error("Cannot set the imaginary portion of a real value");  }
 

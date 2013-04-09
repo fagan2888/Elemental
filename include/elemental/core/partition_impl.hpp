@@ -43,8 +43,8 @@ void PartitionUp__( const AM& A, AM& AT, AM& AB, Int heightAB, bool lock )
 {
     heightAB = std::min(heightAB,A.Height());
     const Int heightAT = A.Height() - heightAB;
-    View__( AT, A, 0, 0, A.Width(), heightAT, lock );
-    View__( AB, A, heightAT, 0, A.Width(), heightAB, lock );
+    View__( AT, A, 0,        0, heightAT, A.Width(), lock );
+    View__( AB, A, heightAT, 0, heightAB, A.Width(), lock );
 }
 
 template<typename Int> inline
@@ -138,8 +138,8 @@ void PartitionDown__( const AM& A, AM& AT, AM& AB, Int heightAT, bool lock )
 {
     heightAT = std::min(heightAT,A.Height());
     const Int heightAB = A.Height() - heightAT;
-    View__( AT, A, 0, 0, A.Width(), heightAT, lock );
-    View__( AB, A, heightAT, 0, A.Width(), heightAB, lock );
+    View__( AT, A, 0,        0, heightAT, A.Width(), lock );
+    View__( AB, A, heightAT, 0, heightAB, A.Width(), lock );
 }
 
 template<typename Int> inline
@@ -231,7 +231,7 @@ void PartitionLeft__( const AM& A, AM& AL, AM& AR, Int widthAR, bool lock )
 {
     widthAR = std::min(widthAR,A.Width());
     const Int widthAL = A.Width() - widthAR;
-    View__( AL, A, 0, 0, A.Height(), widthAL, lock );
+    View__( AL, A, 0, 0,       A.Height(), widthAL, lock );
     View__( AR, A, 0, widthAL, A.Height(), widthAR, lock );
 }
 
@@ -312,7 +312,7 @@ void PartitionRight__( const AM& A, AM& AL, AM& AR, Int widthAL, bool lock )
 {
     widthAL = std::min(widthAL,A.Width());
     const Int widthAR = A.Width() - widthAL;
-    View__( AL, A, 0, 0, A.Height(), widthAL, lock );
+    View__( AL, A, 0, 0,       A.Height(), widthAL, lock );
     View__( AR, A, 0, widthAL, A.Height(), widthAR, lock );
 }
 

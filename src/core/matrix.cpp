@@ -11,13 +11,11 @@
 
 namespace elem {
 
-//
-// For some reason G++ doesn't like AutoMatrix --- it tries to instantiate it even 
-// though it's a virtual base class. It's quite possible I don't know my C++ here.
-// So I made the class non-abstract by implementing all virtual methods. The empty
-// ones are sent to this simple exception. In theory of course they should never
-// be called, so this exception should never occur.
-//
+// In a previous version of this code, it *seemed* that G++ did not like AutoMatrix.
+// But in fact, what was happening was that the AutoMatrix constructor was being 
+// called as an implicit conversion due to the failure to define a properly
+// overloaded function. So G++ was right, I was wrong :-) Still, there's no harm in
+// leaving these in here, for now.
 
 static void vbs_( const char* s ) { 
 	std::ostringstream msg;
@@ -90,7 +88,7 @@ static void AssertDimensions( Int height, Int width, Int ldim, bool zero_ok = fa
 template <typename Int>
 static void AssertView( Int i, Int j, Int height, Int width, Int height_, Int width_ )
 {
-	AssertBounds( i, j, height, width );
+	AssertBounds( i, j, height_, width_ );
     if( (i+height) > height_ || (j+width) > width_ )
     {
         std::ostringstream msg;
@@ -196,9 +194,9 @@ void AssertContiguous3x3(
     	 A10.LockedBuffer_() != A00.LockedBuffer_(A00.Height(),0) ||
     	 A11.LockedBuffer_() != A01.LockedBuffer_(A01.Height(),0) ||
     	 A12.LockedBuffer_() != A02.LockedBuffer_(A02.Height(),0) ||
-    	 A20.LockedBuffer_() != A00.LockedBuffer_(A10.Height(),0) ||
-    	 A21.LockedBuffer_() != A01.LockedBuffer_(A11.Height(),0) ||
-    	 A22.LockedBuffer_() != A02.LockedBuffer_(A12.Height(),0) )
+    	 A20.LockedBuffer_() != A10.LockedBuffer_(A10.Height(),0) ||
+    	 A21.LockedBuffer_() != A11.LockedBuffer_(A11.Height(),0) ||
+    	 A22.LockedBuffer_() != A12.LockedBuffer_(A12.Height(),0) )
         throw std::logic_error("3x3 must have contiguous memory");
 }
 
@@ -255,9 +253,9 @@ static void CastingError( MatrixTypes A, MatrixTypes B )
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertDataTypes( const Self& BB, bool unknown_ok ) const
+void AutoMatrix<Int>::AssertDataTypes( MatrixTypes B, bool unknown_ok ) const
 { 
-	MatrixTypes A = DataType(), B = BB.DataType();
+	MatrixTypes A = DataType();
 	if ( A != B ) {
 		std::ostringstream msg;
 		msg << "Data type mismatch: " << TypeNames[A] << " != " << TypeNames[B];
@@ -268,9 +266,9 @@ void AutoMatrix<Int>::AssertDataTypes( const Self& BB, bool unknown_ok ) const
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertCRDataTypes( const Self& BB, bool imag_bad ) const
+void AutoMatrix<Int>::AssertCRDataTypes( MatrixTypes B, bool imag_bad ) const
 {
-	MatrixTypes A = DataType(), B = BB.DataType();
+	MatrixTypes A = DataType();
 	if ( RealTypes[A] != B ) {
 		std::ostringstream msg;
 		msg << "Data type mismatch: Real(" << TypeNames[A] << ") != " << TypeNames[B];
@@ -391,7 +389,9 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type )
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix()
 : AutoMatrix<Int>( sizeof(T) )
-{ }
+{ 
+	Parent::Setup_( 0, 0, 0, 1 );
+}
 
 template<typename Int>
 AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width )
@@ -503,6 +503,8 @@ template<typename T,typename Int>
 Matrix<T,Int>::Matrix( const Self& A )
 : AutoMatrix<Int>( sizeof(T) )
 { 
+	memory_.Require( A.Height() * A.Width() );
+	Parent::Setup_( memory_.Buffer(), A.Height(), A.Width(), std::max(A.Width(),1) );
 	Parent::CopyFrom_( A );
 }
 
@@ -582,10 +584,10 @@ AutoMatrix<Int>::Print( std::ostream& os, const std::string msg ) const
     PushCallStack("AutoMatrix::Print");
     if( msg != "" )
         os << msg << std::endl;
-    os << "AutoMatrix: (h,w,l) = " << height_ << "," << width_ << "," << ldim_ 
-       << "), dtype = " << TypeNames[DataType()];
+    os << "Matrix: (h,w,l)=(" << height_ << "," << width_ << "," << ldim_ 
+       << "), dtype=" << TypeNames[DataType()];
     if ( DataType() == Unknown )
-    	os << ", dsize = " << DataSize();
+    	os << ", dsize=" << DataSize();
     os << std::endl;
     PopCallStack();
 }
@@ -1097,20 +1099,17 @@ Matrix<T,Int>::UpdateImagPartOfDiagonal_
 template<typename Int>
 void AutoMatrix<Int>::CopyFrom_( const Self& A )
 {
-    Int height = Height();
-    Int width = Width();
     if( !viewing_ )
-        ResizeTo( A.Height(), A.Width() );
-    const Int chunk = DataSize();
-    height *= chunk;
-    Int ldim = LDim() * chunk;
-    Int ldimOfA = A.LDim() * chunk;
+        ResizeTo_( A.height_, A.width_ );
+    Int height = height_ * dsize_;
+    Int ldim = ldim_  * dsize_;
+    Int ldimOfA = A.ldim_ * dsize_;
     char *dst = static_cast<char*>( data_ );
-    const char* src = static_cast<const char*>( A.LockedBuffer() );
+    const char* src = static_cast<const char*>( A.data_ );
 #ifdef HAVE_OPENMP
     #pragma omp parallel for
 #endif
-    for( Int j=0; j<width; ++j ) {
+    for( Int j=0; j<width_; ++j ) {
         MemCopy( dst, src, height );
         dst += ldim;
         src += ldimOfA;
@@ -1127,7 +1126,7 @@ AutoMatrix<Int>::CopyFrom( const Self& A )
 	if ( viewing_ && ( height_ != A.height_ || width_ != A.width_ ) )
 		throw std::logic_error
 			("Cannot assign to a view of different dimensions");
-	CopyFrom( A );			
+	CopyFrom_( A );			
     PopCallStack();
 }
 
@@ -1136,17 +1135,16 @@ AutoMatrix<Int>::CopyFrom( const Self& A )
 // Only change ldim when necessary. Simply 'shrink' our view if possible.
 //
 
-template<typename Int>
+// template<typename Int>
+// void
+// AutoMatrix<Int>::Empty()
+// { vbs_( "Empty" ); }
+// 
+template <typename T,typename Int>
 void
-AutoMatrix<Int>::Empty()
+Matrix<T,Int>::Empty()
 {
-	Require( 0 );
-    height_ = 0;
-    width_ = 0;
-    ldim_ = 1;
-    data_ = 0;
-    viewing_ = false;
-    locked_ = false;
+	memory_.Empty();
 }
 
 template <typename Int>
@@ -1169,22 +1167,24 @@ template<typename Int>
 void
 AutoMatrix<Int>::ResizeTo_( Int height, Int width, Int ldim )
 {
-    // Only change the ldim when necessary. Simply 'shrink' our view if 
-    // possible.
+    // Only change the ldim when necessary. Simply 'shrink' our view if possible.
 	if ( !viewing_ )
 	    data_ = Require( ldim * width );
-	ldim_ = ldim;
+	ldim_   = ldim;
     height_ = height;
-    width_ = width;
+    width_  = width;
 }
 
 template<typename Int>
 void
 AutoMatrix<Int>::ResizeTo_( Int height, Int width )
 {
+	Int ldim;
 	if ( height > height_ || width > width_ )
-		ldim_ = std::max( height, 1 );
-	ResizeTo_( height, width, ldim_ );
+		ldim = std::max( height, 1 );
+	else
+		ldim = ldim_;
+	ResizeTo_( height, width, ldim );
 }
 
 template<typename Int>
@@ -1223,7 +1223,7 @@ void
 AutoMatrix<Int>::Attach_
 ( Int height, Int width, const void* buffer, Int ldim, bool locked, Int i, Int j )
 {
-	Require( 0 );
+	Empty();
     height_  = height;
     width_   = width;
     ldim_    = ldim;
@@ -1237,7 +1237,7 @@ void
 AutoMatrix<Int>::Attach__
 ( const Self& B, Int i, Int j, Int height, Int width, bool lock )
 { 
-	Require( 0 );
+	Empty();
     height_  = height;
     width_   = width;
     ldim_    = B.ldim_;

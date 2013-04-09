@@ -43,6 +43,14 @@ template <> MatrixTypes inline
 Matrix<Complex<double>,int>::DataType() const { return DComplex; }
 #endif // ifndef DISABLE_COMPLEX
 
+template <typename Int>
+void AutoMatrix<Int>::AssertDataTypes( const Self& BB, bool unknown_ok ) const
+{ AssertDataTypes( BB.DataType(), unknown_ok ); }
+
+template <typename Int>
+void AutoMatrix<Int>::AssertCRDataTypes( const Self& BB, bool unknown_ok ) const
+{ AssertDataTypes( BB.DataType(), unknown_ok ); }
+
 template<typename Int> inline
 Int AutoMatrix<Int>::Height() const
 { return height_;  }
@@ -140,11 +148,11 @@ void AutoMatrix<Int>::Attach_( MatrixTypes dtype, Int height, Int width, const v
 { Attach_( height, width, buffer, ldim, false, 0, 0 ); }
 
 template <typename Int> inline
-void AutoMatrix<Int>::Print( std::string msg )
+void AutoMatrix<Int>::Print( std::string msg ) const
 { return Print( std::cout, msg ); }
 
 template <typename T,typename Int> inline
-void Matrix<T,Int>::Print( std::string msg )
+void Matrix<T,Int>::Print( std::string msg ) const
 { return Print( std::cout, msg ); }
 
 //
@@ -153,41 +161,41 @@ void Matrix<T,Int>::Print( std::string msg )
 
 template <typename T,typename Int> inline
 T Matrix<T,Int>::Get_( Int i, Int j ) const
-{ return *LockedBuffer( i, j ); }
+{ return *LockedBuffer_( i, j ); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::Set_( Int i, Int j, T a )
-{ *Buffer( i, j ) = a; }
+{ *Buffer_( i, j ) = a; }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::Update_( Int i, Int j, T a )
-{ *Buffer( i, j ) += a; }
+{ *Buffer_( i, j ) += a; }
 
 template <typename T,typename Int> inline
 typename Base<T>::type 
 Matrix<T,Int>::GetRealPart_( Int i, Int j ) const
-{ return elem::GReal_( *LockedBuffer( i, j ) ); }
+{ return elem::GReal_( *LockedBuffer_( i, j ) ); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::SetRealPart_( Int i, Int j, typename Base<T>::type a )
-{ elem::SReal_( *Buffer( i, j ) ) = a; }
+{ elem::SReal_( *Buffer_( i, j ) ) = a; }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::UpdateRealPart_( Int i, Int j, typename Base<T>::type a )
-{ elem::SReal_( *Buffer( i, j ) ) += a; }
+{ elem::SReal_( *Buffer_( i, j ) ) += a; }
 
 template <typename T,typename Int> inline
 typename Base<T>::type 
 Matrix<T,Int>::GetImagPart_( Int i, Int j ) const
-{ return elem::GImag_( *LockedBuffer( i, j ) ); }
+{ return elem::GImag_( *LockedBuffer_( i, j ) ); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::SetImagPart_( Int i, Int j, typename Base<T>::type a )
-{ elem::SImag_( *Buffer( i, j ) ) = a; }
+{ elem::SImag_( *Buffer_( i, j ) ) = a; }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::UpdateImagPart_( Int i, Int j, typename Base<T>::type a )
-{ elem::SImag_( *Buffer( i, j ) ) += a; }
+{ elem::SImag_( *Buffer_( i, j ) ) += a; }
 
 template <typename T,typename Int> inline
 T Matrix<T,Int>::Get( Int i, Int j ) const
