@@ -328,7 +328,7 @@ Matrix<T,Int>::Matrix( Int height, Int width )
 	AssertDimensions( height, width, ldim );
 #endif
 	memory_.Require( ldim * width );
-	Parent::Setup_( memory_.Buffer(), height, width, ldim);
+	Parent::Setup_( memory_.Buffer(), height, width, ldim );
 }
 
 template<typename T,typename Int>
@@ -339,7 +339,7 @@ Matrix<T,Int>::Matrix( Int height, Int width, Int ldim )
 	AssertDimensions( height, width, ldim );
 #endif
 	memory_.Require( ldim * width );
-	Parent::Setup_( memory_.Buffer(), height, width, ldim);
+	Parent::Setup_( memory_.Buffer(), height, width, ldim );
 }
 
 template<typename Int>
@@ -504,7 +504,7 @@ Matrix<T,Int>::Matrix( const Self& A )
 : AutoMatrix<Int>( sizeof(T) )
 { 
 	memory_.Require( A.Height() * A.Width() );
-	Parent::Setup_( memory_.Buffer(), A.Height(), A.Width(), std::max(A.Width(),1) );
+	Parent::Setup_( memory_.Buffer(), A.Height(), A.Width(), std::max(A.Height(),1) );
 	Parent::CopyFrom_( A );
 }
 
@@ -1259,11 +1259,6 @@ AutoMatrix<Int>::Attach
     PopCallStack();
 }
 
-
-#undef M
-#undef AM
-#undef DM
-
 template class AutoMatrix<int>;
 template class Matrix<int,int>;
 #ifndef DISABLE_FLOAT
@@ -1277,13 +1272,12 @@ template class Matrix<Complex<float>,int>;
 template class Matrix<Complex<double>,int>;
 #endif // ifndef DISABLE_COMPLEX
 
-// To make our life easier. Undef'd at the bottom of the header
-
 //
 // Explicit instantiations
 //
 
 #define COMMA ,
+#undef TEMPLATE_INST
 #define TEMPLATE_INST(T,M,I) \
 	template void View T ( M&, M& ); \
 	template void LockedView T ( M&, const M& ); \
@@ -1339,8 +1333,8 @@ template class Matrix<Complex<double>,int>;
 	template void SlideLockedPartitionUpDiagonal( M&, M&, const M&, const M&, const M&, const M&, const M&, const M&, M&, M&, const M&, const M&, const M& ); \
 	template void SlidePartitionDownDiagonal( M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M&, M& ); \
 	template void SlideLockedPartitionDownDiagonal( M&, M&, const M&, const M&, const M&, const M&, const M&, const M&, M&, M&, const M&, const M&, const M& );
+	
 TEMPLATE_INST( <int>, AutoMatrix <int>, int )
-
 #ifndef DISABLE_FLOAT
 TEMPLATE_INST( <float COMMA int>, Matrix <float COMMA int>, int )
 #endif

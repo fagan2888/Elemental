@@ -114,6 +114,7 @@ main( int argc, char* argv[] )
 
     try
     {
+    	const long seed = Input("--seed","random number seed",LONG_MAX);
         const int m = Input("--height","height of matrix",100);
         const int nb = Input("--nb","algorithmic blocksize",96);
         const bool pivot = Input("--pivot","pivoted LU?",true);
@@ -122,6 +123,8 @@ main( int argc, char* argv[] )
         const bool print = Input("--print","print matrices?",false);
         ProcessInput();
         PrintInputReport();
+        if ( seed != LONG_MAX )
+        	srand48(seed);
 
         SetBlocksize( nb );
 #ifndef RELEASE
