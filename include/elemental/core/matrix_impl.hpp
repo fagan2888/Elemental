@@ -75,9 +75,9 @@ template<typename Int> inline
 Int AutoMatrix<Int>::DataSize() const
 { return dsize_; }
 
-template <typename T,typename Int> inline
-size_t Matrix<T,Int>::MemorySize() const
-{ return memory_.Size(); }
+template <typename Int> inline
+size_t AutoMatrix<Int>::MemorySize() const
+{ return numel_ * dsize_; }
 
 template<typename Int> inline
 bool AutoMatrix<Int>::Viewing() const
@@ -121,7 +121,7 @@ const T* Matrix<T,Int>::LockedBuffer() const
 
 template<typename Int> inline
 void* AutoMatrix<Int>::Buffer_( Int i, Int j )
-{ return static_cast<char*>(data_) + ( i + j * ldim_ ) * dsize_; }
+{ return data_ + ( i + j * ldim_ ) * dsize_; }
 
 template<typename T,typename Int> inline
 T* Matrix<T,Int>::Buffer_( Int i, Int j )
@@ -133,7 +133,7 @@ T* Matrix<T,Int>::Buffer( Int i, Int j )
 
 template <typename Int> inline
 const void* AutoMatrix<Int>::LockedBuffer_( Int i, Int j ) const
-{ return static_cast<const char*>(data_) + ( i + j * ldim_ ) * dsize_; }
+{ return data_ + ( i + j * ldim_ ) * dsize_; }
 
 template<typename T,typename Int> inline
 const T* Matrix<T,Int>::LockedBuffer_( Int i, Int j ) const
@@ -145,7 +145,7 @@ const T* Matrix<T,Int>::LockedBuffer( Int i, Int j ) const
 
 template <typename Int> inline
 void AutoMatrix<Int>::Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
-{ Attach_( height, width, buffer, ldim, false, 0, 0 ); }
+{ Attach_( height, width, buffer, ldim, false ); }
 
 template <typename Int> inline
 void AutoMatrix<Int>::Print( std::string msg ) const
@@ -253,30 +253,30 @@ void Matrix<T,Int>::UpdateDiagonal( Self& d, Int offset )
 { RPARENT(UpdateDiagonal)( d, offset ); }
 
 template <typename T,typename Int> inline
-void Matrix<T,Int>::GetRealPartOfDiagonal( Self& d, Int offset ) const
+void Matrix<T,Int>::GetRealPartOfDiagonal( RSelf& d, Int offset ) const
 { RPARENT(GetRealPartOfDiagonal)( d, offset ); }
 
 template <typename T,typename Int> inline
-void Matrix<T,Int>::SetRealPartOfDiagonal( Self& d, Int offset )
+void Matrix<T,Int>::SetRealPartOfDiagonal( RSelf& d, Int offset )
 { RPARENT(SetRealPartOfDiagonal)( d, offset ); }
 
 template <typename T,typename Int> inline
-void Matrix<T,Int>::UpdateRealPartOfDiagonal( Self& d, Int offset )
+void Matrix<T,Int>::UpdateRealPartOfDiagonal( RSelf& d, Int offset )
 { RPARENT(UpdateRealPartOfDiagonal)( d, offset ); }
 
 // Only valid for complex data
 template <typename T,typename Int> inline
-void Matrix<T,Int>::GetImagPartOfDiagonal( Self& d, Int offset ) const
+void Matrix<T,Int>::GetImagPartOfDiagonal( RSelf& d, Int offset ) const
 { RPARENT(GetImagPartOfDiagonal)( d, offset ); }
 
 // Only valid for complex data
 template <typename T,typename Int> inline
-void Matrix<T,Int>::SetImagPartOfDiagonal( Self& d, Int offset )
+void Matrix<T,Int>::SetImagPartOfDiagonal( RSelf& d, Int offset )
 { RPARENT(SetImagPartOfDiagonal)( d, offset ); }
 
 // Only valid for complex data
 template <typename T,typename Int> inline
-void Matrix<T,Int>::UpdateImagPartOfDiagonal( Self& d, Int offset )
+void Matrix<T,Int>::UpdateImagPartOfDiagonal( RSelf& d, Int offset )
 { RPARENT(UpdateImagPartOfDiagonal)( d, offset ); }
 
 template <typename T,typename Int> inline
@@ -295,6 +295,9 @@ template <typename T,typename Int> inline
 const Matrix<T,Int>& Matrix<T,Int>::operator=( const Self& A ) 
 { PARENT(CopyFrom)( A ); return *this; }
 
+template <typename Int>
+void AutoMatrix<Int>::Attach__( const Self& B, Int i, Int j, Int height, Int width, bool lock )
+{ Attach_( height, width, B.data_ + ( i + j * B.ldim_ ) * B.dsize_, B.ldim_, lock ); }
 
 #undef PARENT
 #undef RPARENT

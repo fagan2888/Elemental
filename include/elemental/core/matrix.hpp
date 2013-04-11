@@ -111,6 +111,8 @@ public:
     Int DiagonalLength( Int offset=0 ) const;
     Int LDim() const;
     Int DataSize() const;
+    bool IsComplex() const;
+    size_t MemorySize() const;
     virtual MatrixTypes DataType() const;
     bool Viewing() const;
     bool Locked() const;
@@ -163,18 +165,14 @@ public:
     void ResizeTo( Int height, Int width, Int ldim );
 	void Attach( MatrixTypes dtype, Int height, Int width, void* buffer, Int ldim );
 	void LockedAttach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim );
-    virtual void Empty() = 0;
+	void Empty();
     
 protected:
-	// Use this constructor with internally managed data.
 	AutoMatrix( size_t dsize );
-	void Setup_( void* data, Int height, Int width, Int ldim );
-	// Use these constructors for extrenally managed data.
+	AutoMatrix( size_t dsize, Int height, Int width, Int ldim );
 	AutoMatrix( size_t dsize, Int height, Int width, void* data, Int ldim );
 	AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim );
-	
-	void AssignHelper( Self& A );
-	void ResizeHelper( Int height, Int width, Int ldim );
+	AutoMatrix( const Self& A );
 	
     //
     // These virtual functions do no consistency checking, but provide type-specific
@@ -222,8 +220,6 @@ protected:
 	void Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     void Attach( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     
-    virtual void* Require( size_t numel ) = 0;
-    
     //
     // By making this one function public that really should not be, we avoid having to
     // declare every view and partition function to be a friend. Fair trade, I think.
@@ -234,11 +230,10 @@ public: // but not.
     void Attach__( const Self& A, Int i, Int j, Int height, Int width, bool lock );
 	
 private:
-	size_t dsize_;
-    Int height_, width_, ldim_;
+    Int height_, width_, ldim_, dsize_;
     bool viewing_, locked_;
-	void* data_; 
-	void Attach_( Int height, Int width, const void* buffer, Int ldim, bool lock, Int i, Int j );
+	size_t numel_; char* data_; 
+	void Attach_( Int height, Int width, const void* buffer, Int ldim, bool lock );
 };
 
 // Matrix base for arbitrary rings
@@ -252,7 +247,7 @@ public:
 	typedef AutoMatrix<Int> Parent;
 	
     //
-    // Constructors, Factories
+    // Constructors
     // 
 
     Matrix(); 
@@ -261,9 +256,13 @@ public:
     Matrix( Int height, Int width, T* buffer, Int ldim );
     Matrix( Int height, Int width, const T* buffer, Int ldim );
     Matrix( const Self& A );
+    
+    //
+    // Factories
+    //
+    
     static Self* Create( Int height, Int width, T* buffer, Int ldim );
     static Self* Create( Int height, Int width, const T* buffer, Int ldim );
-    
     Self* CloneEmpty() const;
 	Self* Clone() const;
 
@@ -272,7 +271,6 @@ public:
     //
 
     MatrixTypes DataType() const;
-    size_t MemorySize() const;
 
     T* Buffer();
     T* Buffer( Int i, Int j );
@@ -311,14 +309,14 @@ public:
     void SetDiagonal( Self& d, Int offset=0 );
     void UpdateDiagonal( Self& d, Int offset=0 );
     
-    void GetRealPartOfDiagonal( Self& d, Int offset = 0 ) const;
-    void SetRealPartOfDiagonal( Self& d, Int offset = 0 );
-    void UpdateRealPartOfDiagonal( Self& d, Int offset = 0 );
+    void GetRealPartOfDiagonal( RSelf& d, Int offset = 0 ) const;
+    void SetRealPartOfDiagonal( RSelf& d, Int offset = 0 );
+    void UpdateRealPartOfDiagonal( RSelf& d, Int offset = 0 );
 
     // Only valid for complex data
-    void GetImagPartOfDiagonal( Self& d, Int offset = 0 ) const;
-    void SetImagPartOfDiagonal( Self& d, Int offset = 0 );
-    void UpdateImagPartOfDiagonal( Self& d, Int offset = 0 );
+    void GetImagPartOfDiagonal( RSelf& d, Int offset = 0 ) const;
+    void SetImagPartOfDiagonal( RSelf& d, Int offset = 0 );
+    void UpdateImagPartOfDiagonal( RSelf& d, Int offset = 0 );
 
     //
     // Viewing other matrix instances (or buffers)
@@ -326,40 +324,39 @@ public:
 
     void Attach( Int height, Int width, T* buffer, Int ldim );
     void LockedAttach( Int height, Int width, const T* buffer, Int ldim );
-	void Empty();
 
     //
     // Utilities
     //
 
     const Self& operator=( const Self& A );
-    
-    // Not sure why I can't protect these. Don't use them.
-    
-	T Get_( Int i, Int j ) const;
-	void Set_( Int i, Int j, T a );
-	void Update_( Int i, Int j, T a );
-    RT GetRealPart_( Int i, Int j ) const;
-	void SetRealPart_( Int i, Int j, RT a );
-	void UpdateRealPart_( Int i, Int j, RT a );
 	
-protected:
-
+private:
+	friend class Matrix<Complex<T>,Int>;
 	friend class AutoMatrix<Int>;
 	
     T* Buffer_();
     T* Buffer_( Int i, Int j );
     const T* LockedBuffer_() const;
     const T* LockedBuffer_( Int i, Int j ) const;
+    
+	T Get_( Int i, Int j ) const;
+	void Set_( Int i, Int j, T a );
+	void Update_( Int i, Int j, T a );
+	
+    RT GetRealPart_( Int i, Int j ) const;
+	void SetRealPart_( Int i, Int j, RT a );
+	void UpdateRealPart_( Int i, Int j, RT a );
 	
     // Only valid for complex data
 	RT GetImagPart_( Int i, Int j ) const;
 	void SetImagPart_( Int i, Int j, RT a );
 	void UpdateImagPart_( Int i, Int j, RT a );
-	
+
 	void Get_( Int i, Int j, void* dst ) const;
 	void Set_( Int i, Int j, const void* src );
 	void Update_( Int i, Int j, const void* src );
+	
     void GetRealPart_( Int i, Int j, void* dst ) const;
     void SetRealPart_( Int i, Int j, const void* src );
     void UpdateRealPart_( Int i, Int j, const void* src );
@@ -372,6 +369,7 @@ protected:
     void GetDiagonal_( Parent& d, Int offset ) const;
     void SetDiagonal_( const Parent& d, Int offset );
     void UpdateDiagonal_( const Parent& d, Int offset );
+    
     void GetRealPartOfDiagonal_( Parent& d, Int offset ) const;
     void SetRealPartOfDiagonal_( const Parent& d, Int offset );
     void UpdateRealPartOfDiagonal_( const Parent& d, Int offset );
@@ -380,10 +378,6 @@ protected:
     void GetImagPartOfDiagonal_( Parent& d, Int offset ) const;
     void SetImagPartOfDiagonal_( const Parent& d, Int offset );
     void UpdateImagPartOfDiagonal_( const Parent& d, Int offset );
-    
-private:    
-	Memory<T> memory_;
-	void* Require( size_t numel );
 };
 
 } // namespace elem

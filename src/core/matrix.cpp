@@ -11,18 +11,6 @@
 
 namespace elem {
 
-// In a previous version of this code, it *seemed* that G++ did not like AutoMatrix.
-// But in fact, what was happening was that the AutoMatrix constructor was being 
-// called as an implicit conversion due to the failure to define a properly
-// overloaded function. So G++ was right, I was wrong :-) Still, there's no harm in
-// leaving these in here, for now.
-
-static void vbs_( const char* s ) { 
-	std::ostringstream msg;
-	msg << "Unexpected call to virtual base class: " << s;
-	throw std::logic_error( msg.str() ); 
-}
-
 //
 // Consistency checkers
 //
@@ -230,6 +218,13 @@ static bool ComplexFlag[] = {
 	false
 };
 
+template <typename Int>
+bool
+AutoMatrix<Int>::IsComplex() const
+{
+	return ComplexFlag[DataType()];
+}
+
 static const char *TypeNames[] = {
 	"Integral",
 #ifndef DISABLE_FLOAT
@@ -305,49 +300,49 @@ static void AssertBuffer( const T* buffer )
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize )
-: dsize_(dsize)
-{}
+: height_(0), width_(0), ldim_(1),
+  viewing_(false), locked_(false), 
+  dsize_(dsize), numel_(0), data_(0)
+{ }
+
+template <typename T,typename Int>
+Matrix<T,Int>::Matrix()
+: AutoMatrix<Int>( sizeof(T) )
+{ }
 
 template<typename Int>
-void AutoMatrix<Int>::Setup_( void* data, Int height, Int width, Int ldim )
-{
-	height_  = height;
-	width_   = width;
-	ldim_    = ldim;
-	viewing_ = false;
-	locked_  = false;
-	data_    = data;
+AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, Int ldim )
+: height_(0), width_(0), ldim_(1),
+  viewing_(false), locked_(false), 
+  dsize_(dsize), numel_(0), data_(0)
+{ 
+#ifndef RELEASE
+	AssertDimensions( height, width, ldim );
+#endif
+	ResizeTo_( height, width, ldim );
 }
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( Int height, Int width )
-: AutoMatrix<Int>( sizeof(T) )
-{ 
-	Int ldim = std::max( height, 1 );
-#ifndef RELEASE
-	AssertDimensions( height, width, ldim );
-#endif
-	memory_.Require( ldim * width );
-	Parent::Setup_( memory_.Buffer(), height, width, ldim );
-}
+: AutoMatrix<Int>( sizeof(T), height, width, std::max(height,1) )
+{ }
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( Int height, Int width, Int ldim )
-: AutoMatrix<Int>( sizeof(T) )
-{ 
-#ifndef RELEASE
-	AssertDimensions( height, width, ldim );
-#endif
-	memory_.Require( ldim * width );
-	Parent::Setup_( memory_.Buffer(), height, width, ldim );
-}
+: AutoMatrix<Int>( sizeof(T), height, width, ldim )
+{ }
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, void* data, Int ldim )
-: dsize_(dsize), height_(height), width_(width), ldim_(std::max(ldim,1)),
-  viewing_(true), locked_(false),
-  data_(data)
-{}
+: height_(0), width_(0), ldim_(1),
+  viewing_(false), locked_(false), 
+  dsize_(dsize), numel_(0), data_(0)
+{
+#ifndef RELEASE
+	AssertDimensions( height, width, ldim );
+#endif
+	Attach_( height, width, data, ldim, false );
+}
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( Int height, Int width, T* data, Int ldim )
@@ -356,10 +351,15 @@ Matrix<T,Int>::Matrix( Int height, Int width, T* data, Int ldim )
 
 template<typename Int>
 AutoMatrix<Int>::AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim )
-: dsize_(dsize), height_(height), width_(width), ldim_(ldim),
-  viewing_(true), locked_(true),
-  data_(const_cast<void*>(data))
-{}
+: height_(0), width_(0), ldim_(1),
+  viewing_(false), locked_(false), 
+  dsize_(dsize), numel_(0), data_(0)
+{
+#ifndef RELEASE
+	AssertDimensions( height, width, ldim );
+#endif
+	Attach_( height, width, data, ldim, true );
+}
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( Int height, Int width, const T* data, Int ldim )
@@ -384,13 +384,6 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type )
 	default: throw std::runtime_error( "Cannot dynamically create a matrix of Unknown type" );
 	return 0;
 	}
-}
-
-template<typename T,typename Int>
-Matrix<T,Int>::Matrix()
-: AutoMatrix<Int>( sizeof(T) )
-{ 
-	Parent::Setup_( 0, 0, 0, 1 );
 }
 
 template<typename Int>
@@ -495,33 +488,24 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 
 template <class T,class Int>
 Matrix<T,Int>* Matrix<T,Int>::Create( Int height, Int width, T* buffer, Int ldim )
-{
-	return new Self( height, width, buffer, ldim );
+{ return new Self( height, width, buffer, ldim ); }
+
+template <typename Int>
+AutoMatrix<Int>::AutoMatrix( const Self& A )
+: viewing_(false), locked_(false), dsize_(A.dsize_), data_(0)
+{ 
+	CopyFrom_( A ); 
 }
 
 template<typename T,typename Int>
 Matrix<T,Int>::Matrix( const Self& A )
-: AutoMatrix<Int>( sizeof(T) )
-{ 
-	memory_.Require( A.Height() * A.Width() );
-	Parent::Setup_( memory_.Buffer(), A.Height(), A.Width(), std::max(A.Height(),1) );
-	Parent::CopyFrom_( A );
-}
-
-template<typename Int>
-AutoMatrix<Int>*
-AutoMatrix<Int>::CloneEmpty() const
-{ vbs_( "CloneEmpty" ); return 0; }
+: AutoMatrix<Int>( A )
+{}
 
 template<typename T,typename Int>
 Matrix<T,Int>*
 Matrix<T,Int>::CloneEmpty() const
 { return new Self; }
-
-template<typename Int>
-AutoMatrix<Int>*
-AutoMatrix<Int>::Clone() const
-{ vbs_( "Clone" ); return 0; }
 
 template<typename T,typename Int>
 Matrix<T,Int>*
@@ -536,7 +520,10 @@ Matrix<T,Int>::Clone() const
 
 template<typename Int>
 AutoMatrix<Int>::~AutoMatrix()
-{ }
+{ 
+	if ( !viewing_ )
+		delete [] data_;
+}
 
 //
 // Basic information
@@ -549,7 +536,7 @@ AutoMatrix<Int>::Buffer()
     PushCallStack("AutoMatrix::Buffer");
     AssertUnlocked();
     PopCallStack();
-    return data_;
+    return Buffer_();
 }
 
 template<typename Int>
@@ -614,11 +601,6 @@ Matrix<T,Int>::Print( std::ostream& os, const std::string msg ) const
 // Entry manipulation
 //
 
-template <typename Int>
-void
-AutoMatrix<Int>::Get_( Int, Int, void* ) const
-{ vbs_( "Get_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::Get_( Int i, Int j, void* ans ) const
@@ -632,11 +614,6 @@ AutoMatrix<Int>::Get( MatrixTypes dtype, Int i, Int j, void* dst ) const
 	AssertBounds( i, j );
 	Get_( i, j, dst );
 }
-
-template <typename Int>
-void
-AutoMatrix<Int>::Set_( Int, Int, const void* )
-{ vbs_( "Set_" ); }
 
 template<typename T,typename Int>
 void
@@ -653,11 +630,6 @@ AutoMatrix<Int>::Set( MatrixTypes dtype, Int i, Int j, const void* dst )
 	Set_( i, j, dst );
 }
 
-template <typename Int>
-void
-AutoMatrix<Int>::Update_( Int, Int, const void* )
-{ vbs_( "Update_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::Update_( Int i, Int j, const void* a )
@@ -673,11 +645,6 @@ AutoMatrix<Int>::Update( MatrixTypes dtype, Int i, Int j, const void* dst )
 	Update_( i, j, dst );
 }
 
-template <typename Int>
-void 
-AutoMatrix<Int>::GetRealPart_( Int i, Int j, void* ans ) const
-{ vbs_( "GetRealPart_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::GetRealPart_( Int i, Int j, void* dst ) const
@@ -691,11 +658,6 @@ AutoMatrix<Int>::GetRealPart( MatrixTypes dtype, Int i, Int j, void* dst ) const
 	AssertBounds( i, j );
 	GetRealPart_( i, j, dst );
 }
-
-template <typename Int>
-void 
-AutoMatrix<Int>::SetRealPart_( Int i, Int j, const void* ans )
-{ vbs_( "SetRealPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -713,11 +675,6 @@ AutoMatrix<Int>::SetRealPart( MatrixTypes dtype, Int i, Int j, const void* dst )
 	AssertUnlocked();
 	SetRealPart_( i, j, dst );
 }
-
-template <typename Int>
-void 
-AutoMatrix<Int>::UpdateRealPart_( Int i, Int j, const void* ans )
-{ vbs_( "UpdateRealPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -737,11 +694,6 @@ AutoMatrix<Int>::UpdateRealPart( MatrixTypes dtype, Int i, Int j, const void* ds
 	UpdateRealPart_( i, j, dst );
 }
 
-template <typename Int>
-void 
-AutoMatrix<Int>::GetImagPart_( Int i, Int j, void* ans ) const
-{ vbs_( "GetImagPart_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::GetImagPart_( Int i, Int j, void* dst ) const
@@ -755,11 +707,6 @@ AutoMatrix<Int>::GetImagPart( MatrixTypes dtype, Int i, Int j, void* dst ) const
 	AssertBounds( i, j );
 	GetImagPart_( i, j, dst );
 }
-
-template <typename Int>
-void 
-AutoMatrix<Int>::SetImagPart_( Int i, Int j, const void* ans )
-{ vbs_( "SetImagPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -775,11 +722,6 @@ AutoMatrix<Int>::SetImagPart( MatrixTypes dtype, Int i, Int j, const void* dst )
 	AssertUnlocked();
 	SetImagPart_( i, j, dst );
 }
-
-template <typename Int>
-void 
-AutoMatrix<Int>::UpdateImagPart_( Int i, Int j, const void* ans )
-{ vbs_( "UpdateImagPart_" ); }
 
 template<typename T,typename Int>
 void
@@ -811,11 +753,6 @@ AutoMatrix<Int>::GetDiagonal( Self& d, Int offset ) const
     GetDiagonal_( d, offset );
 }
 
-template <typename Int>
-void
-AutoMatrix<Int>::GetDiagonal_( Self& d, Int offset ) const
-{ vbs_( "GetDiagonal_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::GetDiagonal_( Parent& dd, Int offset ) const
@@ -843,11 +780,6 @@ AutoMatrix<Int>::SetDiagonal( const Self& d, Int offset )
 	SetDiagonal_( d, offset );        
 }
 
-template <typename Int>
-void
-AutoMatrix<Int>::SetDiagonal_( const Self& d, Int offset )
-{ vbs_( "SetDiagonal_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::SetDiagonal_( const AutoMatrix<Int>& dd, Int offset )
@@ -872,11 +804,6 @@ AutoMatrix<Int>::UpdateDiagonal( const AutoMatrix<Int>& d, Int offset )
         throw std::logic_error("d is not a column-vector of the right length");
     UpdateDiagonal_( d, offset );
 }
-
-template <typename Int>
-void
-AutoMatrix<Int>::UpdateDiagonal_( const Self& d, Int offset )
-{ vbs_( "UpdateDiagonal_" ); }
 
 template <typename T,typename Int>
 void
@@ -903,11 +830,6 @@ AutoMatrix<Int>::GetRealPartOfDiagonal
         throw std::logic_error("d is not a column-vector of the right length");
     GetRealPartOfDiagonal_( d, offset );
 }
-
-template <typename Int>
-void
-AutoMatrix<Int>::GetRealPartOfDiagonal_( Self& d, Int offset ) const
-{ vbs_( "GetRealPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -937,11 +859,6 @@ AutoMatrix<Int>::GetImagPartOfDiagonal
         throw std::logic_error("d is not a column-vector of the right length");
     GetImagPartOfDiagonal_( d, offset );
 }
-
-template <typename Int>
-void
-AutoMatrix<Int>::GetImagPartOfDiagonal_( Self& d, Int offset ) const
-{ vbs_( "GetImagPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -973,11 +890,6 @@ AutoMatrix<Int>::SetRealPartOfDiagonal
     PopCallStack();
 }
 
-template <typename Int>
-void
-AutoMatrix<Int>::SetRealPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_( "SetRealPartOfDiagonal_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::SetRealPartOfDiagonal_
@@ -1005,11 +917,6 @@ AutoMatrix<Int>::SetImagPartOfDiagonal
     SetImagPartOfDiagonal_( d, offset );
     PopCallStack();
 }
-
-template <typename Int>
-void
-AutoMatrix<Int>::SetImagPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_( "SetImagPartOfDiagonal_" ); }
 
 template<typename T,typename Int>
 void
@@ -1039,11 +946,6 @@ AutoMatrix<Int>::UpdateRealPartOfDiagonal
     PopCallStack();
 }
 
-template <typename Int>
-void
-AutoMatrix<Int>::UpdateRealPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_( "UpdateRealPartOfDiagonal_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::UpdateRealPartOfDiagonal_
@@ -1072,11 +974,6 @@ AutoMatrix<Int>::UpdateImagPartOfDiagonal
     PopCallStack();
 }
 
-template <typename Int>
-void
-AutoMatrix<Int>::UpdateImagPartOfDiagonal_( const Self& d, Int offset )
-{ vbs_( "UpdateImagPartOfDiagional_" ); }
-
 template<typename T,typename Int>
 void
 Matrix<T,Int>::UpdateImagPartOfDiagonal_
@@ -1099,17 +996,17 @@ Matrix<T,Int>::UpdateImagPartOfDiagonal_
 template<typename Int>
 void AutoMatrix<Int>::CopyFrom_( const Self& A )
 {
-    if( !viewing_ )
-        ResizeTo_( A.height_, A.width_ );
+    if ( !viewing_ )
+        ResizeTo_( A.height_, A.width_, std::max(A.height_,1) );
     Int height = height_ * dsize_;
     Int ldim = ldim_  * dsize_;
     Int ldimOfA = A.ldim_ * dsize_;
-    char *dst = static_cast<char*>( data_ );
-    const char* src = static_cast<const char*>( A.data_ );
+    char *dst = data_;
+    const char* src = A.data_;
 #ifdef HAVE_OPENMP
     #pragma omp parallel for
 #endif
-    for( Int j=0; j<width_; ++j ) {
+    for( Int j = 0; j < width_ ; ++j ) {
         MemCopy( dst, src, height );
         dst += ldim;
         src += ldimOfA;
@@ -1135,32 +1032,19 @@ AutoMatrix<Int>::CopyFrom( const Self& A )
 // Only change ldim when necessary. Simply 'shrink' our view if possible.
 //
 
-// template<typename Int>
-// void
-// AutoMatrix<Int>::Empty()
-// { vbs_( "Empty" ); }
-// 
-template <typename T,typename Int>
-void
-Matrix<T,Int>::Empty()
-{
-	memory_.Empty();
-}
-
 template <typename Int>
-void*
-AutoMatrix<Int>::Require( size_t numel )
-{ 
-	vbs_( "Require" ); 
-	return 0;
-}
-
-template <typename T,typename Int>
-void*
-Matrix<T,Int>::Require( size_t numel )
+void 
+AutoMatrix<Int>::Empty()
 {
-	memory_.Require( numel );
-	return memory_.Buffer();
+	if ( !viewing_ )
+		delete [] data_;
+	viewing_ = false;
+	locked_ = false;
+	height_ = 0;
+	width_ = 0;
+	ldim_ = 1;
+	numel_ = 0;
+	data_ = 0;
 }
 
 template<typename Int>
@@ -1168,11 +1052,18 @@ void
 AutoMatrix<Int>::ResizeTo_( Int height, Int width, Int ldim )
 {
     // Only change the ldim when necessary. Simply 'shrink' our view if possible.
-	if ( !viewing_ )
-	    data_ = Require( ldim * width );
-	ldim_   = ldim;
+	if ( !viewing_ ) {
+		size_t nelem = ldim * width;
+		if ( numel_ < nelem ) {
+			delete [] data_;
+			if ( nelem )
+				data_ = new char [ nelem * dsize_ ];
+			numel_ = nelem;
+		}
+	}
     height_ = height;
-    width_  = width;
+	width_ = width;
+	ldim_ = ldim;
 }
 
 template<typename Int>
@@ -1194,7 +1085,7 @@ AutoMatrix<Int>::ResizeTo( Int height, Int width )
     PushCallStack("AutoMatrix::ResizeTo(height,width)");
     AssertNonnegative( height, "height" );
     AssertNonnegative( width, "width" );
-    if( viewing_ && ( height > height_ || width > width_ ) )
+    if ( viewing_ && ( height > height_ || width > width_ ) )
         throw std::logic_error("Cannot increase the size of a view");
 	ResizeTo_( height, width );
     PopCallStack();
@@ -1221,29 +1112,17 @@ AutoMatrix<Int>::ResizeTo( Int height, Int width, Int ldim )
 template<typename Int>
 void
 AutoMatrix<Int>::Attach_
-( Int height, Int width, const void* buffer, Int ldim, bool locked, Int i, Int j )
+( Int height, Int width, const void* buffer, Int ldim, bool locked )
 {
-	Empty();
+	if ( !viewing_ )
+		delete [] data_;
     height_  = height;
     width_   = width;
     ldim_    = ldim;
     viewing_ = true;
     locked_  = locked;
-	data_    = static_cast<char*>(const_cast<void*>(buffer)) + ( i + ldim * j ) * dsize_;
-}
-
-template <typename Int>
-void
-AutoMatrix<Int>::Attach__
-( const Self& B, Int i, Int j, Int height, Int width, bool lock )
-{ 
-	Empty();
-    height_  = height;
-    width_   = width;
-    ldim_    = B.ldim_;
-    viewing_ = true;
-    locked_  = lock;
-	data_    = static_cast<char*>(B.data_) + ( i + B.ldim_ * j ) * B.dsize_;
+	numel_   = 0;
+	data_    = static_cast<char*>(const_cast<void*>(buffer));
 }
 
 template<typename Int>
@@ -1255,7 +1134,7 @@ AutoMatrix<Int>::Attach
     AssertDataTypes( dtype );
     AssertDimensions( height, width, ldim );
     AssertBuffer( buffer );
-	Attach_( height, width, buffer, ldim, 0, 0, lock );
+	Attach_( height, width, buffer, ldim, lock );
     PopCallStack();
 }
 

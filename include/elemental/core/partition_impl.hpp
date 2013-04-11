@@ -397,10 +397,10 @@ void PartitionUpLeftDiagonal__( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& ABR,
 		W1 = H1,
 		H2 = A.Height() - H1, 
 		W2 = A.Width() - W1;
-	View__( ATL, A, 0,  0, H1, W1, lock );
-	View__( ATR, A, 0, W1, H1, W2, lock );
-	View__( ABL, A, H1, 0, H2, W1, lock );
-	View__( ABR, A, H1, 0, H2, W2, lock );
+	View__( ATL, A, 0,   0, H1, W1, lock );
+	View__( ATR, A, 0,  W1, H1, W2, lock );
+	View__( ABL, A, H1,  0, H2, W1, lock );
+	View__( ABR, A, H1, W1, H2, W2, lock );
 }
 
 template<typename Int> inline
@@ -574,10 +574,10 @@ void PartitionUpRightDiagonal__( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& ABR
 		W2 = H2,
 		H1 = A.Height() - H2, 
 		W1 = A.Width() - W2;
-	View__( ATL, A, 0,  0, H1, W1, lock );
-	View__( ATR, A, 0, W1, H1, W2, lock );
-	View__( ABL, A, H1, 0, H2, W1, lock );
-	View__( ABR, A, H1, 0, H2, W2, lock );
+	View__( ATL, A, 0,   0, H1, W1, lock );
+	View__( ATR, A, 0,  W1, H1, W2, lock );
+	View__( ABL, A, H1,  0, H2, W1, lock );
+	View__( ABR, A, H1, W1, H2, W2, lock );
 }
 
 template<typename Int> inline
@@ -683,10 +683,10 @@ void PartitionDownLeftDiagonal__( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& AB
 		W1 = H1,
 		H2 = A.Height() - H1, 
 		W2 = A.Width() - W1;
-	View__( ATL, A, 0,  0, H1, W1, lock );
-	View__( ATR, A, 0, W1, H1, W2, lock );
-	View__( ABL, A, H1, 0, H2, W1, lock );
-	View__( ABR, A, H1, 0, H2, W2, lock );
+	View__( ATL, A, 0,   0, H1, W1, lock );
+	View__( ATR, A, 0,  W1, H1, W2, lock );
+	View__( ABL, A, H1,  0, H2, W1, lock );
+	View__( ABR, A, H1, W1, H2, W2, lock );
 }
 
 template<typename Int> inline
@@ -858,10 +858,10 @@ void PartitionDownRightDiagonal__( const AM& A, AM& ATL, AM& ATR, AM& ABL, AM& A
 		W2 = H2,
 		H1 = A.Height() - H2, 
 		W1 = A.Width() - W2;
-	View__( ATL, A, 0,  0, H1, W1, lock );
-	View__( ATR, A, 0, W1, H1, W2, lock );
-	View__( ABL, A, H1, 0, H2, W1, lock );
-	View__( ABR, A, H1, 0, H2, W2, lock );
+	View__( ATL, A, 0,   0, H1, W1, lock );
+	View__( ATR, A, 0,  W1, H1, W2, lock );
+	View__( ABL, A, H1,  0, H2, W1, lock );
+	View__( ABR, A, H1, W1, H2, W2, lock );
 }
 
 template<typename Int> inline
