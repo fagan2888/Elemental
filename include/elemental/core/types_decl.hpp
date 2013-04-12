@@ -17,6 +17,48 @@ typedef unsigned char byte;
 typedef Complex<float>  scomplex; 
 typedef Complex<double> dcomplex;
 
+namespace data_type_wrapper {
+
+enum ScalarTypes
+{
+	INTEGRAL,
+#ifndef DISABLE_FLOAT
+	SINGLE,
+#endif	
+	DOUBLE,
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT	
+	SCOMPLEX,
+#endif	
+	DCOMPLEX,
+#endif	
+	UNKNOWN
+};
+
+template <typename T,enum ScalarTypes S,typename Int=int>
+struct ScalarTypeBase {
+	typedef T Type;
+	typedef T RealType;
+	static const ScalarTypes Enum = S;
+	static const char* Name;
+	static const bool isValid = false;
+	static const bool isComplex = false;
+	static const bool canBeComplex = false;
+};
+
+template <typename T,typename Int=int>
+struct ScalarType : public ScalarTypeBase<T,UNKNOWN,Int>
+{
+};
+
+template <enum ScalarTypes S,typename Int=int>
+struct ScalarEnum : public ScalarTypeBase<void*,S,Int>
+{
+};
+
+}
+using namespace data_type_wrapper;
+
 // For the safe computation of products. The result is given by 
 //   product = rho * exp(kappa*n)
 // where rho lies in (usually on) the unit circle and kappa is real-valued.

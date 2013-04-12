@@ -18,6 +18,114 @@ SafeProduct<F,Int>::SafeProduct( Int numEntries )
 : rho(1), kappa(0), n(numEntries)
 { }
 
+namespace data_type_wrapper {
+
+template <typename T,enum ScalarTypes S,typename Int>
+const char* ScalarTypeBase<T,S,Int>::Name = "Unknown";
+
+template <typename Int>
+struct ScalarTypeBase<Int,INTEGRAL,Int> {
+	typedef Int Self;
+	typedef Int Real;
+	static const ScalarTypes Enum = INTEGRAL;
+	static const char* Name;
+	static const bool isComplex = false;
+	static const bool canBeComplex = false;
+};
+
+template <typename Int>
+const char* ScalarTypeBase<Int,INTEGRAL,Int>::Name = "Integral";
+
+template <typename Int>
+struct ScalarType<Int,Int> : public ScalarTypeBase<Int,INTEGRAL,Int> {};
+
+template <typename Int>
+struct ScalarEnum<INTEGRAL,Int> : public ScalarTypeBase<Int,INTEGRAL,Int> {};
+
+#ifndef DISABLE_FLOAT
+template <typename Int>
+struct ScalarTypeBase<float,SINGLE,Int> {
+	typedef float Type;
+	typedef float Real;
+	static const ScalarTypes Enum = SINGLE;
+	static const char* Name;
+	static const bool isComplex = false;
+	static const bool canBeComplex = true;
+};
+
+template <typename Int>
+const char* ScalarTypeBase<float,SINGLE,Int>::Name = "Single";
+
+template <typename Int>
+struct ScalarType<float,Int> : public ScalarTypeBase<float,SINGLE,Int> {};
+
+template <typename Int>
+struct ScalarEnum<SINGLE,Int> : public ScalarTypeBase<float,SINGLE,Int> {};
+#endif
+
+template <typename Int>
+struct ScalarTypeBase<double,DOUBLE,Int> {
+	typedef double Type;
+	typedef double Real;
+	static const ScalarTypes Enum = DOUBLE;
+	static const char* Name;
+	static const bool isComplex = false;
+	static const bool canBeComplex = true;
+};
+
+template <typename Int>
+const char* ScalarTypeBase<double,DOUBLE,Int>::Name = "Double";
+
+template <typename Int>
+struct ScalarType<double,Int> : public ScalarTypeBase<double,DOUBLE,Int> {};
+
+template <typename Int>
+struct ScalarEnum<DOUBLE,Int> : public ScalarTypeBase<double,DOUBLE,Int> {};
+
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+template <typename Int>
+struct ScalarTypeBase<scomplex,SCOMPLEX,Int> {
+	typedef scomplex Type;
+	typedef float Real;
+	static const ScalarTypes Enum = SCOMPLEX;
+	static const char* Name;
+	static const bool isComplex = true;
+	static const bool canBeComplex = false;
+};
+
+template <typename Int>
+const char* ScalarTypeBase<scomplex,SCOMPLEX,Int>::Name = "SComplex";
+
+template <typename Int>
+struct ScalarType<scomplex,Int> : public ScalarTypeBase<scomplex,SCOMPLEX,Int> {};
+
+template <typename Int>
+struct ScalarEnum<SCOMPLEX,Int> : public ScalarTypeBase<scomplex,SCOMPLEX,Int> {};
+#endif
+
+template <typename Int>
+struct ScalarTypeBase<dcomplex,DCOMPLEX,Int> {
+	typedef dcomplex Type;
+	typedef double Real;
+	static const ScalarTypes Enum = DCOMPLEX;
+	static const char* Name;
+	static const bool isComplex = true;
+	static const bool canBeComplex = false;
+};
+
+template <typename Int>
+const char* ScalarTypeBase<dcomplex,DCOMPLEX,Int>::Name = "SComplex";
+
+template <typename Int>
+struct ScalarType<dcomplex,Int> : public ScalarTypeBase<dcomplex,SCOMPLEX,Int> {};
+
+template <typename Int>
+struct ScalarEnum<DCOMPLEX,Int> : public ScalarTypeBase<dcomplex,SCOMPLEX,Int> {};
+#endif
+
+} // namespace data_type_wrapper
+
 namespace distribution_wrapper {
 
 inline std::string 

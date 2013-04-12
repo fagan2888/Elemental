@@ -13,35 +13,15 @@
 #ifdef RELEASE
 #define PARENT(x) Parent :: x ## _
 #define RPARENT(x) x ## _
-#define GPARENT(x,i,j) return x ## _(i,j)
-#define GRPARENT(x,i,j) return x ## _(i,j)
-#define SPARENT(x,i,j,a) x ## _(i,j,a)
 #else
 #define PARENT(x) Parent :: x
 #define RPARENT(x) Parent :: x
-#define GPARENT(x,i,j) T a; Parent :: x ( DataType(), i, j, &a ); return a
-#define GRPARENT(x,i,j) typename Base<T>::type a; Parent :: x ( DataType(), i, j, &a ); return a
-#define SPARENT(x,i,j,a) Parent :: x( DataType(), i, j, &a )
 #endif
 
 namespace elem {
 
-template <> inline
-MatrixTypes Matrix<int,int>::DataType() const { return Integral; }
-#ifndef DISABLE_FLOAT
-template <> MatrixTypes inline
-Matrix<float,int>::DataType() const { return Float; }
-#endif // ifndef DISABLE_FLOAT
-template <> MatrixTypes inline
-Matrix<double,int>::DataType() const { return Double; }
-#ifndef DISABLE_COMPLEX
-#ifndef DISABLE_FLOAT
-template <> MatrixTypes inline
-Matrix<Complex<float>,int>::DataType() const { return FComplex; }
-#endif // ifndef DISABLE_FLOAT
-template <> MatrixTypes inline
-Matrix<Complex<double>,int>::DataType() const { return DComplex; }
-#endif // ifndef DISABLE_COMPLEX
+template <typename T,typename Int> inline
+ScalarTypes Matrix<T,Int>::DataType() const { return ScalarType<T>::Enum; }
 
 template <typename Int>
 void AutoMatrix<Int>::AssertDataTypes( const Self& BB, bool unknown_ok ) const
@@ -68,10 +48,6 @@ Int AutoMatrix<Int>::LDim() const
 { return ldim_;  }
 
 template<typename Int> inline
-MatrixTypes AutoMatrix<Int>::DataType() const
-{ return Unknown; }
-
-template<typename Int> inline
 Int AutoMatrix<Int>::DataSize() const
 { return dsize_; }
 
@@ -86,6 +62,16 @@ bool AutoMatrix<Int>::Viewing() const
 template<typename Int> inline
 bool AutoMatrix<Int>::Locked() const
 { return locked_; }
+
+template <typename Int>
+template <typename T>
+Matrix<T,Int>& AutoMatrix<Int>::Cast_()
+{ return reinterpret_cast<elem::Matrix<T,Int>&>(*this); }
+
+template <typename Int>
+template <typename T>
+const Matrix<T,Int>& AutoMatrix<Int>::Cast_() const
+{ return reinterpret_cast<const elem::Matrix<T,Int>&>(*this); }
 
 //
 // Buffer retrieval
@@ -144,7 +130,7 @@ const T* Matrix<T,Int>::LockedBuffer( Int i, Int j ) const
 { return static_cast<const T*>(RPARENT(LockedBuffer)(i,j)); }
 
 template <typename Int> inline
-void AutoMatrix<Int>::Attach_( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
+void AutoMatrix<Int>::Attach_( ScalarTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
 { Attach_( height, width, buffer, ldim, false ); }
 
 template <typename Int> inline
@@ -199,42 +185,42 @@ void Matrix<T,Int>::UpdateImagPart_( Int i, Int j, typename Base<T>::type a )
 
 template <typename T,typename Int> inline
 T Matrix<T,Int>::Get( Int i, Int j ) const
-{ GPARENT(Get,i,j); }
+{ return RPARENT(Get)(i,j); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::Set( Int i, Int j, T a )
-{ SPARENT(Set,i,j,a); }
+{ RPARENT(Set)(i,j,a); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::Update( Int i, Int j, T a )
-{ SPARENT(Update,i,j,a); }
+{ RPARENT(Update)(i,j,a); }
 
 template <typename T,typename Int> inline
 typename Base<T>::type 
 Matrix<T,Int>::GetRealPart( Int i, Int j ) const
-{ GRPARENT(GetRealPart,i,j); }
+{ return RPARENT(GetRealPart)(i,j); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::SetRealPart( Int i, Int j, typename Base<T>::type a )
-{ SPARENT(SetRealPart,i,j,a); }
+{ RPARENT(SetRealPart)(i,j,a); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::UpdateRealPart( Int i, Int j, typename Base<T>::type a )
-{ SPARENT(UpdateRealPart,i,j,a); }
+{ RPARENT(UpdateRealPart)(i,j,a); }
 
 // Only valid for complex data
 
 template <typename T,typename Int> inline
 typename Base<T>::type Matrix<T,Int>::GetImagPart( Int i, Int j ) const
-{ GRPARENT(GetImagPart,i,j); }
+{ return RPARENT(GetImagPart)(i,j); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::SetImagPart( Int i, Int j, typename Base<T>::type a )
-{ SPARENT(SetImagPart,i,j,a); }
+{ RPARENT(SetImagPart)(i,j,a); }
 
 template <typename T,typename Int> inline
 void Matrix<T,Int>::UpdateImagPart( Int i, Int j, typename Base<T>::type a )
-{ SPARENT(UpdateImagPart,i,j,a); }
+{ RPARENT(UpdateImagPart)(i,j,a); }
 
 //
 // Diagonal manipulation
@@ -292,9 +278,21 @@ const AutoMatrix<Int>& AutoMatrix<Int>::operator=( const Self& A )
 { CopyFrom( A ); return *this; }
 
 template <typename T,typename Int> inline
-const Matrix<T,Int>& Matrix<T,Int>::operator=( const Self& A ) 
-{ PARENT(CopyFrom)( A ); return *this; }
+void Matrix<T,Int>::CopyFrom( const Self& A )
+{ PARENT(CopyFrom)( A ); }
 
+template <typename T,typename Int> inline
+const Matrix<T,Int>& Matrix<T,Int>::operator=( const Self& A ) 
+{ CopyFrom( A ); return *this; }
+
+template <typename T,typename Int> inline
+void Matrix<T,Int>::ResizeTo( Int height, Int width )
+{ PARENT(ResizeTo)( height, width ); }
+
+template <typename T,typename Int> inline
+void Matrix<T,Int>::ResizeTo( Int height, Int width, Int ldim )
+{ PARENT(ResizeTo)( height, width, ldim ); }
+    
 template <typename Int>
 void AutoMatrix<Int>::Attach__( const Self& B, Int i, Int j, Int height, Int width, bool lock )
 { Attach_( height, width, B.data_ + ( i + j * B.ldim_ ) * B.dsize_, B.ldim_, lock ); }

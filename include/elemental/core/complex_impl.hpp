@@ -36,6 +36,13 @@ Complex<R>::Complex( const std::complex<R>& alpha )
 { }
 
 template<typename R>
+template<typename S>
+inline
+Complex<R>::Complex( const Complex<S>& alpha )
+: real(alpha.real), imag(alpha.imag)
+{ }
+
+template<typename R>
 inline Complex<R>& 
 Complex<R>::operator=( const R& alpha )
 {
@@ -79,7 +86,7 @@ Complex<R>::operator/=( const R& alpha )
 }
 
 template<typename R>
-inline Complex<R>& 
+inline Complex<R>&
 Complex<R>::operator=( const Complex<R>& alpha )
 {
     real = alpha.real;
@@ -134,6 +141,16 @@ Complex<R>::operator/=( const Complex<R>& alpha )
         real = (a*ratio+b)/denom;
         imag = (b*ratio-a)/denom;
     }
+    return *this;
+}
+
+template<typename R>
+template<typename S>
+inline Complex<R>&
+Complex<R>::operator=( const Complex<S>& alpha )
+{
+    real = alpha.real;
+    imag = alpha.imag;
     return *this;
 }
 

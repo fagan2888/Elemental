@@ -188,19 +188,19 @@ void AssertContiguous3x3(
         throw std::logic_error("3x3 must have contiguous memory");
 }
 
-static const char RealTypes[] = {
-	Integral,
+static const ScalarTypes RealTypes[] = {
+	INTEGRAL,
 #ifndef DISABLE_FLOAT
-	Float,
+	SINGLE,
 #endif
-	Double,
+	DOUBLE,
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT
-	Float,
+	SINGLE,
 #endif
-	Double,
+	DOUBLE,
 #endif
-	Unknown
+	UNKNOWN
 };
 
 static bool ComplexFlag[] = {
@@ -228,42 +228,46 @@ AutoMatrix<Int>::IsComplex() const
 static const char *TypeNames[] = {
 	"Integral",
 #ifndef DISABLE_FLOAT
-	"Float",
+	"Single",
 #endif
 	"Double",
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT
-	"FComplex",
+	"SComplex",
 #endif
 	"DComplex",
 #endif
-	"Unknown"
+	"UNKNOWN"
 };
 
-static void CastingError( MatrixTypes A, MatrixTypes B )
+template <typename Int>
+void AutoMatrix<Int>::AssertCastingType( ScalarTypes B ) const
 {
-	std::ostringstream msg;
-	msg << "Casting error: cannot implicitly cast from " << TypeNames[A] << " to " << TypeNames[B];
-	throw std::logic_error( msg.str() );
+	ScalarTypes A = DataType();
+	if ( A != B ) {
+		std::ostringstream msg;
+		msg << "Casting error: cannot cast from " << TypeNames[A] << " to " << TypeNames[B];
+		throw std::logic_error( msg.str() );
+	}
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertDataTypes( MatrixTypes B, bool unknown_ok ) const
+void AutoMatrix<Int>::AssertDataTypes( ScalarTypes B, bool unknown_ok ) const
 { 
-	MatrixTypes A = DataType();
+	ScalarTypes A = DataType();
 	if ( A != B ) {
 		std::ostringstream msg;
 		msg << "Data type mismatch: " << TypeNames[A] << " != " << TypeNames[B];
 		throw std::logic_error( msg.str() );
 	}
-	if ( A == Unknown || B == Unknown )
-		throw std::logic_error( "Cannot use this method with Unknown data types" );
+	if ( A == UNKNOWN || B == UNKNOWN )
+		throw std::logic_error( "Cannot use this method with UNKNOWN data types" );
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertCRDataTypes( MatrixTypes B, bool imag_bad ) const
+void AutoMatrix<Int>::AssertCRDataTypes( ScalarTypes B, bool imag_bad ) const
 {
-	MatrixTypes A = DataType();
+	ScalarTypes A = DataType();
 	if ( RealTypes[A] != B ) {
 		std::ostringstream msg;
 		msg << "Data type mismatch: Real(" << TypeNames[A] << ") != " << TypeNames[B];
@@ -367,42 +371,42 @@ Matrix<T,Int>::Matrix( Int height, Int width, const T* data, Int ldim )
 {}
 
 template<typename Int>
-AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type )
+AutoMatrix<Int>* AutoMatrix<Int>::Create( ScalarTypes type )
 {
 	switch ( type ) {
-	case Integral: return new Matrix<Int,Int>();
+	case INTEGRAL: return new Matrix<Int,Int>();
 #ifndef DISABLE_FLOAT
-	case Float:    return new Matrix<float,Int>();
+	case SINGLE:    return new Matrix<float,Int>();
 #endif	
-	case Double:   return new Matrix<double,Int>();
+	case DOUBLE:   return new Matrix<double,Int>();
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT	
-	case FComplex: return new Matrix<Complex<float>,Int>();
+	case SCOMPLEX: return new Matrix<scomplex,Int>();
 #endif	
-	case DComplex: return new Matrix<Complex<double>,Int>();
+	case DCOMPLEX: return new Matrix<dcomplex,Int>();
 #endif	
-	default: throw std::runtime_error( "Cannot dynamically create a matrix of Unknown type" );
+	default: throw std::runtime_error( "Cannot dynamically create a matrix of UNKNOWN type" );
 	return 0;
 	}
 }
 
 template<typename Int>
-AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width )
+AutoMatrix<Int>* AutoMatrix<Int>::Create( ScalarTypes type, Int height, Int width )
 {
 	PushCallStack("AutoMatrix::Create( type, height, width )");
 	AssertDimensions( height, width, 0, true );
 	PopCallStack();
 	switch ( type ) {
-	case Integral: return new Matrix<Int,Int>( height, width );
+	case INTEGRAL: return new Matrix<Int,Int>( height, width );
 #ifndef DISABLE_FLOAT
-	case Float:    return new Matrix<float,Int>( height, width );
+	case SINGLE:    return new Matrix<float,Int>( height, width );
 #endif	
-	case Double:   return new Matrix<double,Int>( height, width );
+	case DOUBLE:   return new Matrix<double,Int>( height, width );
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT	
-	case FComplex: return new Matrix<Complex<float>,Int>( height, width );
+	case SCOMPLEX: return new Matrix<scomplex,Int>( height, width );
 #endif	
-	case DComplex: return new Matrix<Complex<double>,Int>( height, width );
+	case DCOMPLEX: return new Matrix<dcomplex,Int>( height, width );
 #endif	
 	default: throw std::runtime_error( "Cannot create AutoMatrix of unknown type" );
 	return 0;
@@ -410,22 +414,22 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 }
 
 template<typename Int>
-AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width, Int ldim )
+AutoMatrix<Int>* AutoMatrix<Int>::Create( ScalarTypes type, Int height, Int width, Int ldim )
 {
 	PushCallStack("AutoMatrix::Create( type, height, width, ldim )");
 	AssertDimensions( height, width, ldim );
 	PopCallStack();
 	switch ( type ) {
-	case Integral: return new Matrix<Int,Int>( height, width, ldim );
+	case INTEGRAL: return new Matrix<Int,Int>( height, width, ldim );
 #ifndef DISABLE_FLOAT
-	case Float:    return new Matrix<float,Int>( height, width, ldim );
+	case SINGLE:    return new Matrix<float,Int>( height, width, ldim );
 #endif	
-	case Double:   return new Matrix<double,Int>( height, width, ldim );
+	case DOUBLE:   return new Matrix<double,Int>( height, width, ldim );
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT	
-	case FComplex: return new Matrix<Complex<float>,Int>( height, width, ldim );
+	case SCOMPLEX: return new Matrix<scomplex,Int>( height, width, ldim );
 #endif	
-	case DComplex: return new Matrix<Complex<double>,Int>( height, width, ldim );
+	case DCOMPLEX: return new Matrix<dcomplex,Int>( height, width, ldim );
 #endif	
 	default: throw std::runtime_error( "Cannot create AutoMatrix of unknown type" );
 	return 0;
@@ -433,23 +437,23 @@ AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int widt
 }
 
 template<typename Int>
-AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width, const void* buffer, Int ldim )
+AutoMatrix<Int>* AutoMatrix<Int>::Create( ScalarTypes type, Int height, Int width, const void* buffer, Int ldim )
 {
 	PushCallStack("AutoMatrix::Create( type, height, width, const buffer, ldim )");
 	AssertDimensions( height, width, ldim );
 	AssertBuffer( buffer );
 	PopCallStack();
 	switch ( type ) {
-	case Integral: return new Matrix<Int,Int>( height, width, static_cast<const Int*>(buffer), ldim );
+	case INTEGRAL: return new Matrix<Int,Int>( height, width, static_cast<const Int*>(buffer), ldim );
 #ifndef DISABLE_FLOAT
-	case Float:    return new Matrix<float,Int>( height, width, static_cast<const float*>(buffer), ldim );
+	case SINGLE:    return new Matrix<float,Int>( height, width, static_cast<const float*>(buffer), ldim );
 #endif	
-	case Double:   return new Matrix<double,Int>( height, width, static_cast<const double*>(buffer), ldim );
+	case DOUBLE:   return new Matrix<double,Int>( height, width, static_cast<const double*>(buffer), ldim );
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT	
-	case FComplex: return new Matrix<Complex<float>,Int>( height, width, static_cast<const Complex<float>*>(buffer), ldim );
+	case SCOMPLEX: return new Matrix<scomplex,Int>( height, width, static_cast<const scomplex*>(buffer), ldim );
 #endif	
-	case DComplex: return new Matrix<Complex<double>,Int>( height, width, static_cast<const Complex<double>*>(buffer), ldim );
+	case DCOMPLEX: return new Matrix<dcomplex,Int>( height, width, static_cast<const dcomplex*>(buffer), ldim );
 #endif	
 	default: throw std::runtime_error( "Cannot create AutoMatrix of unknown type" );
 	return 0;
@@ -463,23 +467,23 @@ Matrix<T,Int>* Matrix<T,Int>::Create( Int height, Int width, const T* buffer, In
 }
 
 template<typename Int>
-AutoMatrix<Int>* AutoMatrix<Int>::Create( MatrixTypes type, Int height, Int width, void* buffer, Int ldim )
+AutoMatrix<Int>* AutoMatrix<Int>::Create( ScalarTypes type, Int height, Int width, void* buffer, Int ldim )
 {
 	PushCallStack("AutoMatrix::Create( type, height, width, buffer, ldim )");
 	AssertDimensions( height, width, ldim );
 	AssertBuffer( buffer );
 	PopCallStack();
 	switch ( type ) {
-	case Integral: return new Matrix<Int,Int>( height, width, static_cast<Int*>(buffer), ldim );
+	case INTEGRAL: return new Matrix<Int,Int>( height, width, static_cast<Int*>(buffer), ldim );
 #ifndef DISABLE_FLOAT
-	case Float:    return new Matrix<float,Int>( height, width, static_cast<float*>(buffer), ldim );
+	case SINGLE:    return new Matrix<float,Int>( height, width, static_cast<float*>(buffer), ldim );
 #endif	
-	case Double:   return new Matrix<double,Int>( height, width, static_cast<double*>(buffer), ldim );
+	case DOUBLE:   return new Matrix<double,Int>( height, width, static_cast<double*>(buffer), ldim );
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT	
-	case FComplex: return new Matrix<Complex<float>,Int>( height, width, static_cast<Complex<float>*>(buffer), ldim );
+	case SCOMPLEX: return new Matrix<scomplex,Int>( height, width, static_cast<scomplex*>(buffer), ldim );
 #endif	
-	case DComplex: return new Matrix<Complex<double>,Int>( height, width, static_cast<Complex<double>*>(buffer), ldim );
+	case DCOMPLEX: return new Matrix<dcomplex,Int>( height, width, static_cast<dcomplex*>(buffer), ldim );
 #endif	
 	default: throw std::runtime_error( "Cannot create AutoMatrix of unknown type" );
 	return 0;
@@ -512,6 +516,22 @@ Matrix<T,Int>*
 Matrix<T,Int>::Clone() const
 {
 	return new Self( *this );
+}
+
+template <typename Int>
+template <typename T>
+Matrix<T,Int>& AutoMatrix<Int>::Cast()
+{
+	AssertCastingType( ScalarType<T>::Enum );
+	return reinterpret_cast<elem::Matrix<T,Int>&>(*this);
+}
+
+template <typename Int>
+template <typename T>
+const Matrix<T,Int>& AutoMatrix<Int>::Cast() const
+{
+	AssertCastingType( ScalarType<T>::Enum );
+	return reinterpret_cast<const elem::Matrix<T,Int>&>(*this);
 }
 
 //
@@ -573,7 +593,7 @@ AutoMatrix<Int>::Print( std::ostream& os, const std::string msg ) const
         os << msg << std::endl;
     os << "Matrix: (h,w,l)=(" << height_ << "," << width_ << "," << ldim_ 
        << "), dtype=" << TypeNames[DataType()];
-    if ( DataType() == Unknown )
+    if ( DataType() == UNKNOWN )
     	os << ", dsize=" << DataSize();
     os << std::endl;
     PopCallStack();
@@ -601,141 +621,157 @@ Matrix<T,Int>::Print( std::ostream& os, const std::string msg ) const
 // Entry manipulation
 //
 
-template<typename T,typename Int>
-void
-Matrix<T,Int>::Get_( Int i, Int j, void* ans ) const
-{ *static_cast<T*>(ans) = Get_( i, j ); }
-
 template <typename Int>
-void
-AutoMatrix<Int>::Get( MatrixTypes dtype, Int i, Int j, void* dst ) const
+Scalar<Int>
+AutoMatrix<Int>::Get( Int i, Int j ) const
 {
-	AssertDataTypes( dtype );
+	Scalar<Int> v;
 	AssertBounds( i, j );
-	Get_( i, j, dst );
+	Get_( i, j, v );
+	return v;
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::Set_( Int i, Int j, const void* ans ) 
-{ Set_( i, j, *static_cast<const T*>( ans ) ); }
-
-template <typename Int>
-void
-AutoMatrix<Int>::Set( MatrixTypes dtype, Int i, Int j, const void* dst )
-{
-	AssertDataTypes( dtype );
-	AssertBounds( i, j );
-	AssertUnlocked();
-	Set_( i, j, dst );
-}
-
-template<typename T,typename Int>
-void
-Matrix<T,Int>::Update_( Int i, Int j, const void* a )
-{ Update_( i, j, *static_cast<const T*>( a ) ); }
-
-template <typename Int>
-void
-AutoMatrix<Int>::Update( MatrixTypes dtype, Int i, Int j, const void* dst )
-{
-	AssertDataTypes( dtype );
-	AssertBounds( i, j );
-	AssertUnlocked();
-	Update_( i, j, dst );
-}
-
-template<typename T,typename Int>
-void
-Matrix<T,Int>::GetRealPart_( Int i, Int j, void* dst ) const
-{ *static_cast<RT*>(dst) = GetRealPart_( i, j ); }
-
-template <typename Int>
-void
-AutoMatrix<Int>::GetRealPart( MatrixTypes dtype, Int i, Int j, void* dst ) const
-{
-	AssertDataTypes( dtype );
-	AssertBounds( i, j );
-	GetRealPart_( i, j, dst );
-}
-
-template<typename T,typename Int>
-void
-Matrix<T,Int>::SetRealPart_( Int i, Int j, const void* dst )
+Matrix<T,Int>::Get_( Int i, Int j, Scalar<Int>& v ) const
 { 
-	SetRealPart_( i, j, *static_cast<const RT*>(dst) ); 
+	v = Get_( i, j ); 
 }
 
 template <typename Int>
 void
-AutoMatrix<Int>::SetRealPart( MatrixTypes dtype, Int i, Int j, const void* dst )
+AutoMatrix<Int>::Set( Int i, Int j, const Scalar<Int>& v )
 {
-	AssertDataTypes( dtype );
 	AssertBounds( i, j );
 	AssertUnlocked();
-	SetRealPart_( i, j, dst );
+	Set_( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::UpdateRealPart_( Int i, Int j, const void* dst )
+Matrix<T,Int>::Set_( Int i, Int j, const Scalar<Int>& v ) 
 { 
-	typedef typename Base<T>::type RT;
-	UpdateRealPart_( i, j, *static_cast<const RT*>(dst) ); 
+	T vv = v.template Cast<T>();
+	Set_( i, j, vv ); 
 }
 
 template <typename Int>
 void
-AutoMatrix<Int>::UpdateRealPart( MatrixTypes dtype, Int i, Int j, const void* dst )
+AutoMatrix<Int>::Update( Int i, Int j, const Scalar<Int>& v )
 {
-	AssertDataTypes( dtype );
 	AssertBounds( i, j );
 	AssertUnlocked();
-	UpdateRealPart_( i, j, dst );
+	Update_( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::GetImagPart_( Int i, Int j, void* dst ) const
-{ *static_cast<RT*>(dst) = GetImagPart_( i, j ); }
+Matrix<T,Int>::Update_( Int i, Int j, const Scalar<Int>& v ) 
+{ 
+	T vv = v.template Cast<T>();
+	Update_( i, j, vv ); 
+}
 
 template <typename Int>
-void
-AutoMatrix<Int>::GetImagPart( MatrixTypes dtype, Int i, Int j, void* dst ) const
+Scalar<Int>
+AutoMatrix<Int>::GetRealPart( Int i, Int j ) const
 {
-	AssertDataTypes( dtype );
+	Scalar<Int> v;
 	AssertBounds( i, j );
-	GetImagPart_( i, j, dst );
+	GetRealPart_( i, j, v );
+	return v;
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::SetImagPart_( Int i, Int j, const void* dst )
-{ SetImagPart_( i, j, *static_cast<const RT*>(dst) ); }
+Matrix<T,Int>::GetRealPart_( Int i, Int j, Scalar<Int>& v ) const
+{ 
+	v = GetRealPart_( i, j ); 
+}
 
 template <typename Int>
 void
-AutoMatrix<Int>::SetImagPart( MatrixTypes dtype, Int i, Int j, const void* dst )
+AutoMatrix<Int>::SetRealPart( Int i, Int j, const Scalar<Int>& v )
 {
-	AssertDataTypes( dtype );
 	AssertBounds( i, j );
 	AssertUnlocked();
-	SetImagPart_( i, j, dst );
+	SetRealPart_( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::UpdateImagPart_( Int i, Int j, const void* dst )
-{ UpdateImagPart_( i, j, *static_cast<const RT*>(dst) ); }
+Matrix<T,Int>::SetRealPart_( Int i, Int j, const Scalar<Int>& v )
+{ 
+	RT vv = v.template Cast<RT>();
+	SetRealPart_( i, j, vv ); 
+}
 
 template <typename Int>
 void
-AutoMatrix<Int>::UpdateImagPart( MatrixTypes dtype, Int i, Int j, const void* dst )
+AutoMatrix<Int>::UpdateRealPart( Int i, Int j, const Scalar<Int>& v )
 {
-	AssertDataTypes( dtype );
 	AssertBounds( i, j );
 	AssertUnlocked();
-	UpdateImagPart_( i, j, dst );
+	UpdateRealPart_( i, j, v );
+}
+
+template<typename T,typename Int>
+void
+Matrix<T,Int>::UpdateRealPart_( Int i, Int j, const Scalar<Int>& v )
+{ 
+	RT vv = v.template Cast<RT>();
+	UpdateRealPart_( i, j, vv ); 
+}
+
+template <typename Int>
+Scalar<Int>
+AutoMatrix<Int>::GetImagPart( Int i, Int j ) const
+{
+	Scalar<Int> v;
+	AssertBounds( i, j );
+	GetImagPart_( i, j, v );
+	return v;
+}
+
+template<typename T,typename Int>
+void
+Matrix<T,Int>::GetImagPart_( Int i, Int j, Scalar<Int>& v ) const
+{ 
+	v = GetImagPart_( i, j ); 
+}
+
+template <typename Int>
+void
+AutoMatrix<Int>::SetImagPart( Int i, Int j, const Scalar<Int>& v )
+{
+	AssertBounds( i, j );
+	AssertUnlocked();
+	SetImagPart_( i, j, v );
+}
+
+template<typename T,typename Int>
+void
+Matrix<T,Int>::SetImagPart_( Int i, Int j, const Scalar<Int>& v )
+{ 
+	RT vv = v.template Cast<RT>();
+	SetImagPart_( i, j, vv ); 
+}
+
+template <typename Int>
+void
+AutoMatrix<Int>::UpdateImagPart( Int i, Int j, const Scalar<Int>& v )
+{
+	AssertBounds( i, j );
+	AssertUnlocked();
+	UpdateImagPart_( i, j, v );
+}
+
+template<typename T,typename Int>
+void
+Matrix<T,Int>::UpdateImagPart_( Int i, Int j, const Scalar<Int>& v )
+{ 
+	RT vv = v.template Cast<RT>();
+	UpdateImagPart_( i, j, vv );
 }
 
 //
@@ -1001,8 +1037,8 @@ void AutoMatrix<Int>::CopyFrom_( const Self& A )
     Int height = height_ * dsize_;
     Int ldim = ldim_  * dsize_;
     Int ldimOfA = A.ldim_ * dsize_;
-    char *dst = data_;
-    const char* src = A.data_;
+    byte *dst = data_;
+    const byte* src = A.data_;
 #ifdef HAVE_OPENMP
     #pragma omp parallel for
 #endif
@@ -1057,7 +1093,7 @@ AutoMatrix<Int>::ResizeTo_( Int height, Int width, Int ldim )
 		if ( numel_ < nelem ) {
 			delete [] data_;
 			if ( nelem )
-				data_ = new char [ nelem * dsize_ ];
+				data_ = new byte [ nelem * dsize_ ];
 			numel_ = nelem;
 		}
 	}
@@ -1122,13 +1158,13 @@ AutoMatrix<Int>::Attach_
     viewing_ = true;
     locked_  = locked;
 	numel_   = 0;
-	data_    = static_cast<char*>(const_cast<void*>(buffer));
+	data_    = static_cast<byte*>(const_cast<void*>(buffer));
 }
 
 template<typename Int>
 void
 AutoMatrix<Int>::Attach
-( MatrixTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
+( ScalarTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
 {
     PushCallStack("AutoMatrix::Attach");
     AssertDataTypes( dtype );
@@ -1140,15 +1176,25 @@ AutoMatrix<Int>::Attach
 
 template class AutoMatrix<int>;
 template class Matrix<int,int>;
+template Matrix<int,int>& AutoMatrix<int>::Cast<int>();
+template const Matrix<int,int>& AutoMatrix<int>::Cast<int>() const;
 #ifndef DISABLE_FLOAT
 template class Matrix<float,int>;
+template Matrix<float,int>& AutoMatrix<int>::Cast<float>();
+template const Matrix<float,int>& AutoMatrix<int>::Cast<float>() const;
 #endif // ifndef DISABLE_FLOAT
 template class Matrix<double,int>;
+template Matrix<double,int>& AutoMatrix<int>::Cast<double>();
+template const Matrix<double,int>& AutoMatrix<int>::Cast<double>() const;
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT
-template class Matrix<Complex<float>,int>;
+template class Matrix<scomplex,int>;
+template Matrix<scomplex,int>& AutoMatrix<int>::Cast<scomplex>();
+template const Matrix<scomplex,int>& AutoMatrix<int>::Cast<scomplex>() const;
 #endif // ifndef DISABLE_FLOAT
-template class Matrix<Complex<double>,int>;
+template class Matrix<dcomplex,int>;
+template Matrix<dcomplex,int>& AutoMatrix<int>::Cast<dcomplex>();
+template const Matrix<dcomplex,int>& AutoMatrix<int>::Cast<dcomplex>() const;
 #endif // ifndef DISABLE_COMPLEX
 
 //
@@ -1220,9 +1266,9 @@ TEMPLATE_INST( <float COMMA int>, Matrix <float COMMA int>, int )
 TEMPLATE_INST( <double COMMA int>, Matrix <double COMMA int>, int )
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT
-TEMPLATE_INST( <Complex<float> COMMA int>, Matrix <Complex<float> COMMA int>, int )
+TEMPLATE_INST( <scomplex COMMA int>, Matrix <scomplex COMMA int>, int )
 #endif
-TEMPLATE_INST( <Complex<double> COMMA int>, Matrix <Complex<double> COMMA int>, int )
+TEMPLATE_INST( <dcomplex COMMA int>, Matrix <dcomplex COMMA int>, int )
 #endif
 
 } // namespace elem

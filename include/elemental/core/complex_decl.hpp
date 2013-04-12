@@ -30,12 +30,18 @@ struct Complex
     Complex( R a );
     Complex( R a, R b );
     Complex( const std::complex<R>& alpha );
-
+    
+    template <class S>
+    Complex( const Complex<S>& alpha );
+	template <class S>
+    Complex<R>& operator=( const Complex<S>& alpha );
+    
     Complex<R>& operator=( const R& alpha );
     Complex<R>& operator+=( const R& alpha );
     Complex<R>& operator-=( const R& alpha );
     Complex<R>& operator*=( const R& alpha );
     Complex<R>& operator/=( const R& alpha );
+    
     Complex<R>& operator=( const Complex<R>& alpha );
     Complex<R>& operator+=( const Complex<R>& alpha );
     Complex<R>& operator-=( const Complex<R>& alpha );
