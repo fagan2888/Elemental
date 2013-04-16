@@ -1,6 +1,8 @@
 Functionality
 =============
+- Add support for BLIS and fused Trmv's
 - Clean up pivoted LU and pivot applications (especially in sequential cases)
+- Add transpose option to LeastSquares
 - Pivoted QR and LQ decompositions 
 - Lower version of reduction to bidiagonal form
 - Reduction to Hessenberg form
