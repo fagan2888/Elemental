@@ -23,6 +23,73 @@ void TypeCastError( ScalarTypes A, ScalarTypes B )
 	throw std::logic_error( "enum::Scalar: cannot cast between types" );
 }
 
+template <typename T,typename Int> inline
+T Cast_( const Scalar<Int>& s )
+{
+	return TypeCastError( s.type_, ScalarType<T,Int>::Enum );
+}
+
+template <>
+int Cast_<int,int>( const Scalar<int>& s )
+{
+	switch ( s.Type() ) {
+	default:       TypeCastError( s.Type(), INTEGRAL );
+	case INTEGRAL: return s.Get<int>();
+	}
+}
+
+template <>
+float Cast_<float,int>( const Scalar<int>& s )
+{
+	switch ( s.Type() ) {
+	default:        TypeCastError( s.Type(), SINGLE );
+	case SINGLE:    return s.Get<float>();
+	}
+}
+
+template <>
+double Cast_<double,int>( const Scalar<int>& s )
+{
+	switch ( s.Type() ) {
+	default:        TypeCastError( s.Type(), DOUBLE );
+	case INTEGRAL:  return s.Get<int>();
+	case SINGLE:    return s.Get<float>();
+	case DOUBLE:    return s.Get<double>();
+	}
+} 
+
+template <>
+scomplex Cast_<scomplex,int>( const Scalar<int>& s )
+{
+	switch ( s.Type() ) {
+	default:       TypeCastError( s.Type(), SCOMPLEX );
+	case SINGLE:   return s.Get<float>();
+	case SCOMPLEX: return s.Get<scomplex>();
+	}
+}
+
+template <>
+dcomplex Cast_<dcomplex,int>( const Scalar<int>& s )
+{
+	switch ( s.Type() ) {
+	default:        TypeCastError( s.Type(), DCOMPLEX );
+	case INTEGRAL:  return s.Get<int>();
+	case SINGLE:    return s.Get<float>();
+	case DOUBLE:    return s.Get<double>();
+	case SCOMPLEX:  return s.Get<scomplex>();
+	case DCOMPLEX:  return s.Get<dcomplex>();
+	}
+}
+
+template <typename Int>
+template <typename T> inline
+T 
+Scalar<Int>::Cast() const
+{
+	AssertTypeKnown( ScalarType<T,Int>::Enum );
+	return Cast_<T,Int>( *this );
+}
+
 template class Scalar<int>;
 template int& Scalar<int>::Set<int>();
 template const int& Scalar<int>::Get<int>() const;

@@ -14,6 +14,11 @@
 
 namespace elem {
 
+template<typename Int>
+void Her2
+( UpperOrLower uplo,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& x, const AutoMatrix<Int>& y, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 Her2

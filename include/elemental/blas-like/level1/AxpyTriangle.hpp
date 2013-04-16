@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void AxpyTriangle( UpperOrLower uplo, const Scalar<Int>& alpha, const AutoMatrix<Int>& A, AutoMatrix<Int>& B );
+
 template<typename T>
 inline void
 AxpyTriangle( UpperOrLower uplo, T alpha, const Matrix<T>& X, Matrix<T>& Y )

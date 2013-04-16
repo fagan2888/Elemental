@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void ScaleTrapezoid( const Scalar<Int>& alpha, LeftOrRight side, UpperOrLower uplo, int offset, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 ScaleTrapezoid

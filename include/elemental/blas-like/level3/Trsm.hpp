@@ -51,6 +51,13 @@ LocalTrsm
 
 namespace elem {
 
+template<typename Int>
+void Trsm
+( LeftOrRight side, UpperOrLower uplo,
+  Orientation orientation, UnitOrNonUnit diag,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, AutoMatrix<Int>& B,
+  bool checkIfSingular=false );
+ 
 template<typename F>
 inline void
 Trsm

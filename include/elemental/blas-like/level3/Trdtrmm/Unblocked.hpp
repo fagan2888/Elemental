@@ -63,7 +63,7 @@ TrdtrmmLUnblocked( Orientation orientation, Matrix<F>& L )
             l10[k*ldim] /= delta11;
 
         // lambda11 := 1 / delta11
-        LBuffer[j+j*ldim] = 1 / delta11;
+        LBuffer[j+j*ldim] = (typename Base<F>::type)(1) / delta11;
     }
 #ifndef RELEASE
     PopCallStack();
@@ -120,7 +120,7 @@ TrdtrmmUUnblocked( Orientation orientation, Matrix<F>& U )
             u01[k] /= delta11;
 
         // lambda11 := 1 / delta11
-        UBuffer[j+j*ldim] = 1 / delta11;
+        UBuffer[j+j*ldim] = (typename Base<F>::type)(1) / delta11;
     }
 #ifndef RELEASE
     PopCallStack();

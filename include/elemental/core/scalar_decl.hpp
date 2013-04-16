@@ -45,6 +45,56 @@ class Scalar
 		byte data_[sizeof(dcomplex)];
 };
 
+template <typename Int>
+class Buffer;
+
+template <typename Int>
+class ConstBuffer
+{
+	public:
+		// Note: assumes a POD object. In C++11 we can test for this.
+		
+		ConstBuffer();
+		ConstBuffer( const ConstBuffer<Int>& v );
+		ConstBuffer( const Buffer<Int>& v );
+		template <class T> ConstBuffer( const T* v );
+		ConstBuffer<Int>& operator=( const ConstBuffer<Int>& v );
+		ConstBuffer<Int>& operator=( const Buffer<Int>& v );
+		template <class T> ConstBuffer<Int>& operator=( const T* v );
+		
+		ScalarTypes Type() const;
+		
+		template <class T> const T* Get() const;
+		operator bool() const;
+		
+	private:
+		ScalarTypes type_;
+		const void* data_;
+};
+
+template <typename Int>
+class Buffer
+{
+	public:
+		// Note: assumes a POD object. In C++11 we can test for this.
+		
+		Buffer();
+		Buffer( const Buffer<Int>& v );
+		template <class T> Buffer( T* v );
+		Buffer<Int>& operator=( const Buffer<Int>& v );
+		template <class T> Buffer<Int>& operator=( T* v );
+		
+		ScalarTypes Type() const;
+		
+		template <class T> T* Get() const;
+		operator bool() const;
+		
+	private:
+		friend class ConstBuffer<Int>;
+		ScalarTypes type_;
+		void* data_;
+};
+
 } // namespace elem
 
 #endif // ifndef CORE_SCALAR_DECL_HPP

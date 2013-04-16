@@ -14,18 +14,12 @@
 
 namespace elem {
 
+template <typename Int>
+void Adjoint( const AutoMatrix<Int>& A, AutoMatrix<Int>& B );
+
 template<typename T>
-inline void
-Adjoint( const Matrix<T>& A, Matrix<T>& B )
-{
-#ifndef RELEASE
-    PushCallStack("Adjoint");
-#endif
-    Transpose( A, B, true );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+inline void Adjoint( const Matrix<T>& A, Matrix<T>& B )
+{ Transpose( A, B, true ); }
 
 template<typename T,Distribution U,Distribution V,
                     Distribution W,Distribution Z>

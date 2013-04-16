@@ -12,6 +12,11 @@
 
 namespace elem {
 
+template <typename Int>
+void DiagonalScale
+( LeftOrRight side, Orientation orientation,
+  const AutoMatrix<Int>& d, AutoMatrix<Int>& X );
+
 template<typename T>
 inline void
 DiagonalScale

@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void Copy( const AutoMatrix<Int>& A, AutoMatrix<Int>& B );
+
 template<typename T>
 inline void
 Copy( const Matrix<T>& A, Matrix<T>& B )

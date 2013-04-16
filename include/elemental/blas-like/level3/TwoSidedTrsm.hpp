@@ -56,7 +56,7 @@ TwoSidedTrsmLUnb( UnitOrNonUnit diag, Matrix<F>& A, const Matrix<F>& L )
 
         // a21 := a21 - (alpha11/2)l21
         for( int k=0; k<a21Height; ++k )
-            a21[k] -= (alpha11/2)*l21[k];
+            a21[k] -= (alpha11/((typename Base<F>::type)(2)))*l21[k];
 
         // A22 := A22 - (l21 a21' + a21 l21')
         F* A22 = &ABuffer[(j+1)+(j+1)*lda];
@@ -64,7 +64,7 @@ TwoSidedTrsmLUnb( UnitOrNonUnit diag, Matrix<F>& A, const Matrix<F>& L )
 
         // a21 := a21 - (alpha11/2)l21
         for( int k=0; k<a21Height; ++k )
-            a21[k] -= (alpha11/2)*l21[k];
+            a21[k] -= (alpha11/((typename Base<F>::type)(2)))*l21[k];
     }
 #ifndef RELEASE
     PopCallStack();
@@ -116,7 +116,7 @@ TwoSidedTrsmUUnb( UnitOrNonUnit diag, Matrix<F>& A, const Matrix<F>& U )
 
         // a12 := a12 - (alpha11/2)u12
         for( int k=0; k<a21Height; ++k )
-            a12[k*lda] -= (alpha11/2)*u12[k*ldu];
+            a12[k*lda] -= (alpha11/((typename Base<F>::type)(2)))*u12[k*ldu];
 
         // A22 := A22 - (a12' u12 + u12' a12)
         F* A22 = &ABuffer[(j+1)+(j+1)*lda];
@@ -129,7 +129,7 @@ TwoSidedTrsmUUnb( UnitOrNonUnit diag, Matrix<F>& A, const Matrix<F>& U )
 
         // a12 := a12 - (alpha11/2)u12
         for( int k=0; k<a21Height; ++k )
-            a12[k*lda] -= (alpha11/2)*u12[k*ldu];
+            a12[k*lda] -= (alpha11/((typename Base<F>::type)(2)))*u12[k*ldu];
     }
 #ifndef RELEASE
     PopCallStack();
@@ -158,6 +158,10 @@ LocalTwoSidedTrsm
 #include "./TwoSidedTrsm/UVar4.hpp"
 
 namespace elem {
+
+template <typename Int>
+void TwoSidedTrsm
+( UpperOrLower uplo, UnitOrNonUnit diag, AutoMatrix<Int>& A, const AutoMatrix<Int>& B );
 
 template<typename F> 
 inline void

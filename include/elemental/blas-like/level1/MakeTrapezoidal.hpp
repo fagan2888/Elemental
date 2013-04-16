@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void MakeTrapezoidal( LeftOrRight side, UpperOrLower uplo, int offset, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 MakeTrapezoidal

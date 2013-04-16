@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void Scale( const Scalar<Int>& alpha, AutoMatrix<Int>& X );
+
 template<typename T>
 inline void
 Scale( T alpha, Matrix<T>& X )

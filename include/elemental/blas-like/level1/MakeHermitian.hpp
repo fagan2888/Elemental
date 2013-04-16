@@ -14,6 +14,9 @@
 
 namespace elem {
 
+template <typename Int>
+void MakeHermitian( UpperOrLower uplo, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 MakeHermitian( UpperOrLower uplo, Matrix<T>& A )

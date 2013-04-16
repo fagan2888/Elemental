@@ -49,6 +49,12 @@ LocalTrmm
 
 namespace elem {
 
+template<typename Int>
+void Trmm
+( LeftOrRight side, UpperOrLower uplo,
+  Orientation orientation, UnitOrNonUnit diag,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, AutoMatrix<Int>& B );
+ 
 template<typename T>
 inline void
 Trmm

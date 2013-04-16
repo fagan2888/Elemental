@@ -14,6 +14,9 @@
 
 namespace elem {
 
+template <typename Int>
+Scalar<Int> Dot( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B );
+
 template<typename F> 
 inline F
 Dot( const Matrix<F>& A, const Matrix<F>& B )

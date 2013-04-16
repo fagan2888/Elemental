@@ -36,6 +36,10 @@ LocalTrdtrmm
 
 namespace elem {
 
+template <typename Int>
+void Trdtrmm
+( Orientation orientation, UpperOrLower uplo, AutoMatrix<Int>& A );
+
 template<typename F>
 inline void
 Trdtrmm( Orientation orientation, UpperOrLower uplo, Matrix<F>& A )

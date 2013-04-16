@@ -34,6 +34,10 @@ inline void LocalGer
 
 } // namespace internal
 
+template <typename Int>
+void
+Ger( const Scalar<Int>& alpha, const AutoMatrix<Int>& x, const AutoMatrix<Int>& y, AutoMatrix<Int>& A );
+  
 template<typename T>
 inline void
 Ger( T alpha, const Matrix<T>& x, const Matrix<T>& y, Matrix<T>& A )

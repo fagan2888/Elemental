@@ -12,6 +12,13 @@
 
 namespace elem {
 
+template<typename Int>
+inline void
+Syr2
+( UpperOrLower uplo,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& x, const AutoMatrix<Int>& y, AutoMatrix<Int>& A, 
+  bool conjugate=false );
+  
 template<typename T>
 inline void
 Syr2

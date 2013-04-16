@@ -12,6 +12,12 @@
 
 namespace elem {
 
+template <typename Int>
+void Conjugate( AutoMatrix<Int>& A );
+
+template <typename Int>
+void Conjugate( const AutoMatrix<Int>& A, AutoMatrix<Int>& B );
+
 // Default case is for real datatypes
 template<typename Z>
 inline void

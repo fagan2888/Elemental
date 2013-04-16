@@ -40,7 +40,7 @@ TwoSidedTrmmLUnb( UnitOrNonUnit diag, Matrix<T>& A, const Matrix<T>& L )
         T* a10 = &ABuffer[j];
         const T* l10 = &LBuffer[j];
         for( int k=0; k<j; ++k )
-            a10[k*lda] += (alpha11/2)*l10[k*ldl];
+            a10[k*lda] += (alpha11/((typename Base<T>::type)(2)))*l10[k*ldl];
 
         // A00 := A00 + (a10' l10 + l10' a10)
         T* A00 = ABuffer;
@@ -52,7 +52,7 @@ TwoSidedTrmmLUnb( UnitOrNonUnit diag, Matrix<T>& A, const Matrix<T>& L )
 
         // a10 := a10 + (alpha11/2)l10
         for( int k=0; k<j; ++k )
-            a10[k*lda] += (alpha11/2)*l10[k*ldl];
+            a10[k*lda] += (alpha11/((typename Base<T>::type)(2)))*l10[k*ldl];
 
         // a10 := conj(lambda11) a10
         if( diag != UNIT )
@@ -102,7 +102,7 @@ TwoSidedTrmmUUnb( UnitOrNonUnit diag, Matrix<T>& A, const Matrix<T>& U )
         T* a01 = &ABuffer[j*lda];
         const T* u01 = &UBuffer[j*ldu];
         for( int k=0; k<j; ++k )
-            a01[k] += (alpha11/2)*u01[k];
+            a01[k] += (alpha11/((typename Base<T>::type)(2)))*u01[k];
 
         // A00 := A00 + (u01 a01' + a01 u01')
         T* A00 = ABuffer;
@@ -110,7 +110,7 @@ TwoSidedTrmmUUnb( UnitOrNonUnit diag, Matrix<T>& A, const Matrix<T>& U )
 
         // a01 := a01 + (alpha11/2)u01
         for( int k=0; k<j; ++k )
-            a01[k] += (alpha11/2)*u01[k];
+            a01[k] += (alpha11/((typename Base<T>::type)(2)))*u01[k];
 
         // a01 := conj(upsilon11) a01
         if( diag != UNIT )
@@ -157,6 +157,10 @@ LocalTwoSidedTrmm
 #include "./TwoSidedTrmm/UVar4.hpp"
 
 namespace elem {
+
+template <typename Int>
+void TwoSidedTrmm
+( UpperOrLower uplo, UnitOrNonUnit diag, AutoMatrix<Int>& A, const AutoMatrix<Int>& B );
 
 template<typename T> 
 inline void

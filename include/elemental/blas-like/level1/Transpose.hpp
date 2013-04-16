@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void Transpose( const AutoMatrix<Int>& A, AutoMatrix<Int>& B, bool conjguate = false );
+
 template<typename T>
 inline void
 Transpose( const Matrix<T>& A, Matrix<T>& B, bool conjugate=false )

@@ -39,6 +39,7 @@ template <typename T,enum ScalarTypes S,typename Int=int>
 struct ScalarTypeBase {
 	typedef T Type;
 	typedef T RealType;
+	static const size_t SizeOf = sizeof(T);
 	static const ScalarTypes Enum = S;
 	static const char* Name;
 	static const bool isValid = false;

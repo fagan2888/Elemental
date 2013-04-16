@@ -14,6 +14,12 @@
 
 namespace elem {
 
+template<typename Int>
+inline void
+Trmv
+( UpperOrLower uplo, Orientation orientation, UnitOrNonUnit diag,
+  const AutoMatrix<Int>& A, AutoMatrix<Int>& x );
+  
 template<typename T>
 inline void
 Trmv

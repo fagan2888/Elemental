@@ -14,6 +14,12 @@
 
 namespace elem {
 
+template<typename Int>
+void
+Hemv
+( UpperOrLower uplo,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, const AutoMatrix<Int>& x, const Scalar<Int>& beta, AutoMatrix<Int>& y );
+
 template<typename T>
 inline void
 Hemv

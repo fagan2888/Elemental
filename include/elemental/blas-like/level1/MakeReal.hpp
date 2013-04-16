@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void MakeReal( AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 MakeReal( Matrix<T>& A )

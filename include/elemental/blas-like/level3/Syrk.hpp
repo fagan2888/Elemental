@@ -17,6 +17,12 @@
 
 namespace elem {
 
+template<typename Int>
+void Syrk
+( UpperOrLower uplo, Orientation orientation,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A,
+  const Scalar<Int>& beta, AutoMatrix<Int>& C, bool conjugate=false );
+
 template<typename T>
 inline void
 Syrk

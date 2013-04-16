@@ -14,6 +14,9 @@
 
 namespace elem {
 
+template <typename Int>
+Scalar<Int> Nrm2( const AutoMatrix<Int>& x );
+
 template<typename F>
 inline typename Base<F>::type
 Nrm2( const Matrix<F>& x )

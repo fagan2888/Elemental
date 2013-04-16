@@ -14,6 +14,9 @@ namespace elem {
 
 // TODO: Think about using a more stable accumulation algorithm?
 
+template <typename Int>
+Scalar<Int> Dotu( const AutoMatrix<Int>& A, const AutoMatrix<Int>& B );
+
 template<typename F> 
 inline F
 Dotu( const Matrix<F>& A, const Matrix<F>& B )

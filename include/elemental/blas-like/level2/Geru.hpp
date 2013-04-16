@@ -12,6 +12,10 @@
 
 namespace elem {
 
+template<typename Int>
+inline void
+Geru( const Scalar<Int>& alpha, const AutoMatrix<Int>& x, const AutoMatrix<Int>& y, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 Geru( T alpha, const Matrix<T>& x, const Matrix<T>& y, Matrix<T>& A )

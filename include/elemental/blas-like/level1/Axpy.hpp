@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void Axpy( const Scalar<Int>& alpha, const AutoMatrix<Int>& A, AutoMatrix<Int>& B );
+
 template<typename T>
 inline void
 Axpy( T alpha, const Matrix<T>& X, Matrix<T>& Y )

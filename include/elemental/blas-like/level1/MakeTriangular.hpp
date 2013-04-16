@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void MakeTriangular( UpperOrLower uplo, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 MakeTriangular( UpperOrLower uplo, Matrix<T>& A )

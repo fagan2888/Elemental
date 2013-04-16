@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void SetDiagonal( AutoMatrix<Int>& A, const Scalar<Int>& alpha );
+
 template<typename T>
 inline void
 SetDiagonal( Matrix<T>& A, T alpha )

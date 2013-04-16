@@ -14,6 +14,12 @@
 
 namespace elem {
 
+template<typename Int>
+void Her2k
+( UpperOrLower uplo, Orientation orientation,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, const AutoMatrix<Int>& B, 
+  const Scalar<Int>& beta, AutoMatrix<Int>& C );
+
 template<typename T>
 inline void
 Her2k

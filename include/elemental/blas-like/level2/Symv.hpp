@@ -21,6 +21,13 @@
 
 namespace elem {
 
+template<typename Int>
+inline void
+Symv
+( UpperOrLower uplo,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, const AutoMatrix<Int>& x, const Scalar<Int>& beta, AutoMatrix<Int>& y,
+  bool conjugate=false );
+  
 template<typename T>
 inline void
 Symv

@@ -43,6 +43,12 @@ inline void LocalGemv
 
 } // namespace internal
 
+template<typename Int>
+inline void
+Gemv
+( Orientation orientation,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, const AutoMatrix<Int>& x, const Scalar<Int>& beta, AutoMatrix<Int>& y );
+  
 template<typename T>
 inline void
 Gemv

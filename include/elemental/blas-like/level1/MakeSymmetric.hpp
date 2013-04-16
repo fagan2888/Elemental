@@ -18,6 +18,9 @@
 
 namespace elem {
 
+template <typename Int>
+void MakeSymmetric( UpperOrLower uplo, AutoMatrix<Int>& A, bool conjugate=false );
+
 template<typename T>
 inline void
 MakeSymmetric( UpperOrLower uplo, Matrix<T>& A, bool conjugate=false )

@@ -34,6 +34,10 @@ LocalTrtrmm
 
 } // namespace internal
 
+template <typename Int>
+void Trtrmm
+( Orientation orientation, UpperOrLower uplo, AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 Trtrmm( Orientation orientation, UpperOrLower uplo, Matrix<T>& A )

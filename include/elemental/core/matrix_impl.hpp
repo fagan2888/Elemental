@@ -48,7 +48,7 @@ Int AutoMatrix<Int>::LDim() const
 { return ldim_;  }
 
 template<typename Int> inline
-Int AutoMatrix<Int>::DataSize() const
+size_t AutoMatrix<Int>::DataSize() const
 { return dsize_; }
 
 template <typename Int> inline

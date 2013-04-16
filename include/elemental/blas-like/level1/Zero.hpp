@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int>
+void Zero( AutoMatrix<Int>& A );
+
 template<typename T>
 inline void
 Zero( Matrix<T>& A )

@@ -17,6 +17,12 @@
 
 namespace elem {
 
+template <typename Int>
+void Symm
+( LeftOrRight side, UpperOrLower uplo,
+  const Scalar<Int>& alpha, const AutoMatrix<Int>& A, const AutoMatrix<Int>& B, 
+  const Scalar<Int>& beta, AutoMatrix<Int>& C, bool conjugate=false );
+
 template<typename T>
 inline void
 Symm

@@ -12,6 +12,11 @@
 
 namespace elem {
 
+template <typename Int>
+void DiagonalSolve
+( LeftOrRight side, Orientation orientation,
+  const AutoMatrix<Int>& d, AutoMatrix<Int>& X, bool checkIfSingular=true );
+
 template<typename F>
 inline void
 DiagonalSolve

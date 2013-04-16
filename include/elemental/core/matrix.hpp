@@ -39,6 +39,7 @@ class AutoMatrix
 public:
 	typedef AutoMatrix<Int> Self;
 	typedef AutoMatrix<Int> Parent;
+	typedef elem::Scalar<Int> Scalar;
 	
 	//
 	// Consistency checkers
@@ -70,15 +71,13 @@ public:
 	//
 	// Factories
 	//
-
-	 static Self* Create( ScalarTypes type );
-	 static Self* Create( ScalarTypes type, Int height, Int width );
-	 static Self* Create( ScalarTypes type, Int height, Int width, Int ldim );
-	 static Self* Create( ScalarTypes type, Int height, Int width, void* buffer, Int ldim );
-	 static Self* Create( ScalarTypes type, Int height, Int width, const void* buffer, Int ldim );
-	// Implemented by derived classes
-    // static Self* Create( Int height, Int width, T* buffer, Int ldim );
-    // static Self* Create( Int height, Int width, const T* buffer, Int ldim );
+	
+	static Self* Create( ScalarTypes stype );
+	static Self* Create( ScalarTypes stype, Int height, Int width );
+	static Self* Create( ScalarTypes stype, Int height, Int width, Int ldim );
+	template <class T> static Self* Create();
+	static Self* Create( Int height, Int width, const elem::Buffer<Int>& buffer, Int ldim );
+	static Self* Create( Int height, Int width, const elem::ConstBuffer<Int>& buffer, Int ldim );
 	virtual Self* CloneEmpty() const = 0;
 	virtual Self* Clone() const = 0;
 	
@@ -104,18 +103,12 @@ public:
     Int Width() const;
     Int DiagonalLength( Int offset=0 ) const;
     Int LDim() const;
-    Int DataSize() const;
     bool IsComplex() const;
+    size_t DataSize() const;
     size_t MemorySize() const;
     virtual ScalarTypes DataType() const = 0;
     bool Viewing() const;
     bool Locked() const;
-
-    void* Buffer();
-    void* Buffer( Int i, Int j );
-
-    const void* LockedBuffer() const;
-    const void* LockedBuffer( Int i, Int j ) const;
     
     //
     // I/O
@@ -128,17 +121,17 @@ public:
     // Entry manipulation
     //
     
-	Scalar<Int> Get( Int i, Int j ) const;
-	void Set( Int i, Int j, const Scalar<Int>& s );
-	void Update( Int i, Int j, const Scalar<Int>& s );
+	Scalar Get( Int i, Int j ) const;
+	void Set( Int i, Int j, const Scalar& s );
+	void Update( Int i, Int j, const Scalar& s );
 	
-    Scalar<Int> GetRealPart( Int i, Int j ) const;
-    void SetRealPart( Int i, Int j, const Scalar<Int>& s );
-    void UpdateRealPart( Int i, Int j, const Scalar<Int>& s );
+    Scalar GetRealPart( Int i, Int j ) const;
+    void SetRealPart( Int i, Int j, const Scalar& s );
+    void UpdateRealPart( Int i, Int j, const Scalar& s );
     
-    Scalar<Int> GetImagPart( Int i, Int j ) const;
-    void SetImagPart( Int i, Int j, const Scalar<Int>& s );
-    void UpdateImagPart( Int i, Int j, const Scalar<Int>& s );
+    Scalar GetImagPart( Int i, Int j ) const;
+    void SetImagPart( Int i, Int j, const Scalar& s );
+    void UpdateImagPart( Int i, Int j, const Scalar& s );
     
     void GetDiagonal( Self& d, Int offset = 0 ) const;
     void SetDiagonal( const Self& d, Int offset = 0 );
@@ -172,6 +165,12 @@ protected:
 	AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim );
 	AutoMatrix( const Self& A );
 	
+    void* Buffer();
+    void* Buffer( Int i, Int j );
+
+    const void* LockedBuffer() const;
+    const void* LockedBuffer( Int i, Int j ) const;
+    
     //
     // These virtual functions do no consistency checking, but provide type-specific
     // implementations for AutoMatrix<Int> to call. AutoMatrix handles all of the
@@ -179,15 +178,15 @@ protected:
     // these itself as well, for consistency.
     //
     
-	virtual void Get_( Int i, Int j, Scalar<Int>& v ) const = 0;
-	virtual void Set_( Int i, Int j, const Scalar<Int>& v ) = 0;
-	virtual void Update_( Int i, Int j, const Scalar<Int>& v ) = 0;
-    virtual void GetRealPart_( Int i, Int j, Scalar<Int>& v ) const = 0;
-    virtual void SetRealPart_( Int i, Int j, const Scalar<Int>& v ) = 0;
-    virtual void UpdateRealPart_( Int i, Int j, const Scalar<Int>& v ) = 0;
-    virtual void GetImagPart_( Int i, Int j, Scalar<Int>& v ) const = 0;
-    virtual void SetImagPart_( Int i, Int j, const Scalar<Int>& v ) = 0;
-    virtual void UpdateImagPart_( Int i, Int j, const Scalar<Int>& v ) = 0;
+	virtual void Get_( Int i, Int j, Scalar& v ) const = 0;
+	virtual void Set_( Int i, Int j, const Scalar& v ) = 0;
+	virtual void Update_( Int i, Int j, const Scalar& v ) = 0;
+    virtual void GetRealPart_( Int i, Int j, Scalar& v ) const = 0;
+    virtual void SetRealPart_( Int i, Int j, const Scalar& v ) = 0;
+    virtual void UpdateRealPart_( Int i, Int j, const Scalar& v ) = 0;
+    virtual void GetImagPart_( Int i, Int j, Scalar& v ) const = 0;
+    virtual void SetImagPart_( Int i, Int j, const Scalar& v ) = 0;
+    virtual void UpdateImagPart_( Int i, Int j, const Scalar& v ) = 0;
     
     virtual void GetDiagonal_( Self& d, Int offset ) const = 0;
     virtual void SetDiagonal_( const Self& d, Int offset ) = 0;
@@ -232,9 +231,9 @@ public: // but not.
 	template <typename T> const Matrix<T,Int>& Cast_() const;
 	
 private:
-    Int height_, width_, ldim_, dsize_;
+    Int height_, width_, ldim_;
     bool viewing_, locked_;
-	size_t numel_; byte* data_; 
+	size_t numel_, dsize_; byte* data_; 
 	void Attach_( Int height, Int width, const void* buffer, Int ldim, bool lock );
 };
 
@@ -247,6 +246,7 @@ public:
 	typedef Matrix<T,Int> Self;
 	typedef Matrix<RT,Int> RSelf;
 	typedef AutoMatrix<Int> Parent;
+	typedef elem::Scalar<Int> Scalar;
 	
     //
     // Constructors
@@ -263,8 +263,6 @@ public:
     // Factories
     //
     
-    static Self* Create( Int height, Int width, T* buffer, Int ldim );
-    static Self* Create( Int height, Int width, const T* buffer, Int ldim );
     Self* CloneEmpty() const;
 	Self* Clone() const;
 
@@ -276,6 +274,7 @@ public:
 
     T* Buffer();
     T* Buffer( Int i, Int j );
+    
     const T* LockedBuffer() const;
     const T* LockedBuffer( Int i, Int j ) const;
 
@@ -337,18 +336,19 @@ private:
 	
     T* Buffer_();
     T* Buffer_( Int i, Int j );
+    
     const T* LockedBuffer_() const;
     const T* LockedBuffer_( Int i, Int j ) const;
     
-	void Get_( Int i, Int j, Scalar<Int>& v ) const;
-	void Set_( Int i, Int j, const Scalar<Int>& v );
-	void Update_( Int i, Int j, const Scalar<Int>& v );
-    void GetRealPart_( Int i, Int j, Scalar<Int>& v ) const;
-    void SetRealPart_( Int i, Int j, const Scalar<Int>& v );
-    void UpdateRealPart_( Int i, Int j, const Scalar<Int>& v );
-    void GetImagPart_( Int i, Int j, Scalar<Int>& v ) const;
-    void SetImagPart_( Int i, Int j, const Scalar<Int>& v );
-    void UpdateImagPart_( Int i, Int j, const Scalar<Int>& v );
+	void Get_( Int i, Int j, Scalar& v ) const;
+	void Set_( Int i, Int j, const Scalar& v );
+	void Update_( Int i, Int j, const Scalar& v );
+    void GetRealPart_( Int i, Int j, Scalar& v ) const;
+    void SetRealPart_( Int i, Int j, const Scalar& v );
+    void UpdateRealPart_( Int i, Int j, const Scalar& v );
+    void GetImagPart_( Int i, Int j, Scalar& v ) const;
+    void SetImagPart_( Int i, Int j, const Scalar& v );
+    void UpdateImagPart_( Int i, Int j, const Scalar& v );
 	
 	T Get_( Int i, Int j ) const;
 	void Set_( Int i, Int j, T a );
