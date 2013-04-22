@@ -18,13 +18,6 @@ namespace elem {
 #define M AutoMatrix<int>
 #define S Scalar<int>
 
-void Adjoint( const M& A1, M& A2 )
-{
-	PushCallStack("Adjoint");
-	Transpose( A1, A2, true );
-	PopCallStack();
-}
-
 void Axpy( const S& alpha, const M& A, M& B )
 { DISPATCH_VOID( 111, A, Axpy, alpha, A, B ) }
 
@@ -37,13 +30,6 @@ void Conjugate( M& A )
 void Conjugate( const M& A, M& B )
 { DISPATCH_VOID( 11, A, Conjugate, A, B ) }
 
-void Copy( const M& A, M& B )
-{
-	PushCallStack("Matrix::Copy");
-	B.CopyFrom( A );
-	PopCallStack();
-}
-
 void DiagonalScale( LeftOrRight side, Orientation orientation, M& d, M& X )
 {
 	PushCallStack("Matrix::DiagonalScale");
@@ -52,15 +38,15 @@ void DiagonalScale( LeftOrRight side, Orientation orientation, M& d, M& X )
 	case DOUBLE:    CAST_0011(DiagonalScale,double,side,orientation,d,X);
 	case SCOMPLEX:
 		if ( d.IsComplex() )
-			DiagonalScale( side, orientation, d.Cast<scomplex>(), X.Cast<scomplex>() );
+			DiagonalScale( side, orientation, CAST(d,scomplex), CAST(X,scomplex) );
 		else
-			DiagonalScale( side, orientation, d.Cast<float>(), X.Cast<scomplex>() );
+			DiagonalScale( side, orientation, CAST(d,float), CAST(X,scomplex) );
 		break;
 	case DCOMPLEX:
 		if ( d.IsComplex() )
-			DiagonalScale( side, orientation, d.Cast<dcomplex>(), X.Cast<dcomplex>() );
+			DiagonalScale( side, orientation, CAST(d,dcomplex), CAST(X,dcomplex) );
 		else
-			DiagonalScale( side, orientation, d.Cast<double>(), X.Cast<dcomplex>() );
+			DiagonalScale( side, orientation, CAST(d,double), CAST(X,dcomplex) );
 		break;
     default: throw std::logic_error( "Not implemented for this data type" ); break;
 	}
@@ -75,15 +61,15 @@ void DiagonalSolve( LeftOrRight side, Orientation orientation, M& d, M& X )
 	case DOUBLE: CAST_0011(DiagonalScale,double,side,orientation,d,X);
 	case SCOMPLEX:
 		if ( d.IsComplex() )
-			DiagonalSolve( side, orientation, d.Cast<scomplex>(), X.Cast<scomplex>() );
+			DiagonalSolve( side, orientation, CAST(d,scomplex), CAST(X,scomplex) );
 		else
-			DiagonalSolve( side, orientation, d.Cast<float>(), X.Cast<scomplex>() );
+			DiagonalSolve( side, orientation, CAST(d,float), CAST(X,scomplex) );
 		break;
 	case DCOMPLEX:
 		if ( d.IsComplex() )
-			DiagonalSolve( side, orientation, d.Cast<dcomplex>(), X.Cast<dcomplex>() );
+			DiagonalSolve( side, orientation, CAST(d,dcomplex), CAST(X,dcomplex) );
 		else
-			DiagonalSolve( side, orientation, d.Cast<double>(), X.Cast<dcomplex>() );
+			DiagonalSolve( side, orientation, CAST(d,double), CAST(X,dcomplex) );
 		break;
     default: throw std::logic_error( "Not implemented for this data type" ); break;
 	}
@@ -126,8 +112,9 @@ void SetDiagonal( M& A, const S& v )
 void Transpose( const M& A, M& B, bool conjugate )
 { DISPATCH_VOID( 110, A, Transpose, A, B, conjugate ) } 
 
-void Zero( M& A )
-{ DISPATCH_VOID( 1, A, Zero, A ) }
+template void Adjoint<int>( const M&, M& );
+template void Copy<int>( const M&, M& );
+template void Zero<int>( M& );
 
 } // namespace elem
 

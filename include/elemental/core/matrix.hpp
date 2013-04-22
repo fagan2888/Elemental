@@ -12,27 +12,6 @@
 
 namespace elem {
 
-template <typename Int> 
-	void AssertNonnegative( Int i, const char* s );
-template <typename Int> void AssertContiguous2x1( 
-	const AutoMatrix<Int>& A0, 
-	const AutoMatrix<Int>& A1 );
-template <typename Int> void AssertContiguous1x2( 
-	const AutoMatrix<Int>& A0, const AutoMatrix<Int>& A1 );
-template <typename Int> void AssertContiguous3x1( 
-	const AutoMatrix<Int>& A0, 
-	const AutoMatrix<Int>& A1,
-	const AutoMatrix<Int>& A2 );
-template <typename Int> void AssertContiguous1x2( 
-	const AutoMatrix<Int>& A0, const AutoMatrix<Int>& A1, const AutoMatrix<Int>& A2 );
-template <typename Int> void AssertContiguous2x2( 
-	const AutoMatrix<Int>& A00, const AutoMatrix<Int>& A01,
-	const AutoMatrix<Int>& A10, const AutoMatrix<Int>& A11 );
-template <typename Int> void AssertContiguous3x3( 
-	const AutoMatrix<Int>& A00, const AutoMatrix<Int>& A01, const AutoMatrix<Int>& A02,
-	const AutoMatrix<Int>& A10, const AutoMatrix<Int>& A11, const AutoMatrix<Int>& A12,
-	const AutoMatrix<Int>& A20, const AutoMatrix<Int>& A21, const AutoMatrix<Int>& A22 );
-	
 template <typename Int>
 class AutoMatrix
 {
@@ -40,33 +19,6 @@ public:
 	typedef AutoMatrix<Int> Self;
 	typedef AutoMatrix<Int> Parent;
 	typedef elem::Scalar<Int> Scalar;
-	
-	//
-	// Consistency checkers
-	//
-	
-    void AssertBounds( Int i, Int j ) const;
-    void AssertCastingType( ScalarTypes target ) const;
-    void AssertDataTypes( ScalarTypes B, bool unknown_ok = false ) const;
-    void AssertDataTypes( const Self& B, bool unknown_ok = false ) const;
-    void AssertCRDataTypes( ScalarTypes B, bool unknown_ok = false ) const;
-    void AssertCRDataTypes( const Self& B, bool imag_bad = false ) const;
-    void AssertView( Int i, Int j, Int height, Int width ) const;
-    enum LockTypes { ViewLock, PartitionLock, MiscLock };
-    void AssertUnlocked( LockTypes ltype = MiscLock ) const;
-    
-    friend void AssertContiguous2x1<>( 
-		const Self& A0, 
-		const Self& A1 );
-	friend void AssertContiguous1x2<>( 
-		const Self& A0, const Self& A1 );
-	friend void AssertContiguous2x2<>( 
-		const Self& A00, const Self& A01,
-		const Self& A10, const Self& A11 );
-	friend void AssertContiguous3x3<>( 
-		const Self& A00, const Self& A01, const Self& A02,
-		const Self& A10, const Self& A11, const Self& A12,
-		const Self& A20, const Self& A21, const Self& A22 );
     
 	//
 	// Factories
@@ -110,12 +62,24 @@ public:
     bool Viewing() const;
     bool Locked() const;
     
+    void* Buffer();
+    void* Buffer( Int i, Int j );
+
+    const void* LockedBuffer() const;
+    const void* LockedBuffer( Int i, Int j ) const;
+    
+    // No bounds checking
+    
+    const void* LockedBuffer_() const;
+    const void* LockedBuffer_( Int i, Int j ) const;
+    
     //
     // I/O
     //
     
     virtual void Print( std::ostream& os, std::string msg="" ) const;
     void Print( std::string msg="" ) const;
+    void PrintShort( std::ostream& os ) const;
     
     //
     // Entry manipulation
@@ -150,7 +114,7 @@ public:
     //
 
 	void CopyFrom( const Self& A );
-    const Self& operator=( const Self& A );
+    Self& operator=( const Self& A );
 
     void ResizeTo( Int height, Int width );
     void ResizeTo( Int height, Int width, Int ldim );
@@ -165,12 +129,6 @@ protected:
 	AutoMatrix( size_t dsize, Int height, Int width, const void* data, Int ldim );
 	AutoMatrix( const Self& A );
 	
-    void* Buffer();
-    void* Buffer( Int i, Int j );
-
-    const void* LockedBuffer() const;
-    const void* LockedBuffer( Int i, Int j ) const;
-    
     //
     // These virtual functions do no consistency checking, but provide type-specific
     // implementations for AutoMatrix<Int> to call. AutoMatrix handles all of the
@@ -178,15 +136,15 @@ protected:
     // these itself as well, for consistency.
     //
     
-	virtual void Get_( Int i, Int j, Scalar& v ) const = 0;
-	virtual void Set_( Int i, Int j, const Scalar& v ) = 0;
-	virtual void Update_( Int i, Int j, const Scalar& v ) = 0;
-    virtual void GetRealPart_( Int i, Int j, Scalar& v ) const = 0;
-    virtual void SetRealPart_( Int i, Int j, const Scalar& v ) = 0;
-    virtual void UpdateRealPart_( Int i, Int j, const Scalar& v ) = 0;
-    virtual void GetImagPart_( Int i, Int j, Scalar& v ) const = 0;
-    virtual void SetImagPart_( Int i, Int j, const Scalar& v ) = 0;
-    virtual void UpdateImagPart_( Int i, Int j, const Scalar& v ) = 0;
+	virtual Scalar Get_S( Int i, Int j ) const = 0;
+	virtual void Set_S( Int i, Int j, const Scalar& v ) = 0;
+	virtual void Update_S( Int i, Int j, const Scalar& v ) = 0;
+    virtual Scalar GetRealPart_S( Int i, Int j ) const = 0;
+    virtual void SetRealPart_S( Int i, Int j, const Scalar& v ) = 0;
+    virtual void UpdateRealPart_S( Int i, Int j, const Scalar& v ) = 0;
+    virtual Scalar GetImagPart_S( Int i, Int j ) const = 0;
+    virtual void SetImagPart_S( Int i, Int j, const Scalar& v ) = 0;
+    virtual void UpdateImagPart_S( Int i, Int j, const Scalar& v ) = 0;
     
     virtual void GetDiagonal_( Self& d, Int offset ) const = 0;
     virtual void SetDiagonal_( const Self& d, Int offset ) = 0;
@@ -208,8 +166,6 @@ protected:
 	
 	void* Buffer_();
     void* Buffer_( Int i, Int j );
-    const void* LockedBuffer_() const;
-    const void* LockedBuffer_( Int i, Int j ) const;
     
     void ResizeTo_( Int height, Int width );
     void ResizeTo_( Int height, Int width, Int ldim );
@@ -218,15 +174,13 @@ protected:
     void Attach( ScalarTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock );
     
     //
-    // By making this one function public that really should not be, we avoid having to
-    // declare every view and partition function to be a friend. Fair trade, I think.
-    // So please don't use this function.
+    // By making these functions public that really should not be, we avoid having to
+    // declare a lot of friend functions here. Fair trade, I think. So please don't
+    // use these functions in your own code.
     //
 
-public: // but not.
+public: // But not. Don't use these.
     void Attach__( const Self& A, Int i, Int j, Int height, Int width, bool lock );
-    
-    // Don't use either. Seriously.
 	template <typename T> Matrix<T,Int>& Cast_();
 	template <typename T> const Matrix<T,Int>& Cast_() const;
 	
@@ -324,7 +278,7 @@ public:
     //
 
 	void CopyFrom( const Self& A );
-    const Self& operator=( const Self& A );
+    Self& operator=( const Self& A );
     void ResizeTo( Int height, Int width );
     void ResizeTo( Int height, Int width, Int ldim );
     void Attach( Int height, Int width, T* buffer, Int ldim );
@@ -340,15 +294,15 @@ private:
     const T* LockedBuffer_() const;
     const T* LockedBuffer_( Int i, Int j ) const;
     
-	void Get_( Int i, Int j, Scalar& v ) const;
-	void Set_( Int i, Int j, const Scalar& v );
-	void Update_( Int i, Int j, const Scalar& v );
-    void GetRealPart_( Int i, Int j, Scalar& v ) const;
-    void SetRealPart_( Int i, Int j, const Scalar& v );
-    void UpdateRealPart_( Int i, Int j, const Scalar& v );
-    void GetImagPart_( Int i, Int j, Scalar& v ) const;
-    void SetImagPart_( Int i, Int j, const Scalar& v );
-    void UpdateImagPart_( Int i, Int j, const Scalar& v );
+	Scalar Get_S( Int i, Int j ) const;
+	void Set_S( Int i, Int j, const Scalar& v );
+	void Update_S( Int i, Int j, const Scalar& v );
+    Scalar GetRealPart_S( Int i, Int j ) const;
+    void SetRealPart_S( Int i, Int j, const Scalar& v );
+    void UpdateRealPart_S( Int i, Int j, const Scalar& v );
+    Scalar GetImagPart_S( Int i, Int j ) const;
+    void SetImagPart_S( Int i, Int j, const Scalar& v );
+    void UpdateImagPart_S( Int i, Int j, const Scalar& v );
 	
 	T Get_( Int i, Int j ) const;
 	void Set_( Int i, Int j, T a );

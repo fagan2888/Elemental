@@ -37,6 +37,12 @@
 # endif
 #endif
 
+#if defined(RELEASE)
+#define RUNDERSCORE(x) x ## _
+#else
+#define RUNDERSCORE(x) x
+#endif
+
 #if defined(BLAS_POST)
 #define BLAS(name) name ## _
 #else
@@ -58,6 +64,7 @@
 #include "elemental/core/types_decl.hpp"
 #include "elemental/core/matrix_forward_decl.hpp"
 #include "elemental/core/dist_matrix_forward_decl.hpp"
+#include "elemental/core/massert.hpp"
 #include "elemental/core/view_decl.hpp"
 #include "elemental/core/scalar_decl.hpp"
 #include "elemental/core/matrix.hpp"
@@ -88,7 +95,9 @@
 // Declare and implement the decoupled parts of the core of the library
 // (perhaps these should be moved into their own directory?)
 #include "elemental/core/scalar_impl.hpp"
+#include "elemental/core/massert_impl.hpp"
 #include "elemental/core/matrix_impl.hpp"
+#include "elemental/core/dist_matrix_impl.hpp"
 #include "elemental/core/view_impl.hpp"
 #include "elemental/core/partition_decl.hpp"
 #include "elemental/core/partition_impl.hpp"

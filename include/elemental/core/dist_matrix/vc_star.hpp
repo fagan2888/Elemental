@@ -21,7 +21,17 @@ template<typename T,typename Int>
 class DistMatrix<T,VC,STAR,Int> : public AbstractDistMatrix<T,Int>
 {
 public:
-    // Create a 0 x 0 distributed matrix
+	typedef DistMatrix<T,VC,STAR,Int> Self;
+	typedef DistMatrix<typename Base<T>::type,VC,STAR,Int> RSelf;
+	typedef AbstractDistMatrix<T,Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	
+	ScalarTypes DataType() const { return ScalarType<T>::Enum; }
+	Distribution RowDist() const { return VC; }
+	Distribution ColDist() const { return STAR; }
+	Distribution2D Dist2D() const { return VC_STAR; }
+	
+	// Create a 0 x 0 distributed matrix
     DistMatrix( const elem::Grid& g=DefaultGrid() );
 
     // Create a height x width distributed matrix
@@ -51,7 +61,7 @@ public:
     DistMatrix( const DistMatrix<T,U,V,Int>& A );
 
     ~DistMatrix();
-
+    
     const DistMatrix<T,VC,STAR,Int>& 
     operator=( const DistMatrix<T,MC,MR,Int>& A );
 
@@ -117,9 +127,9 @@ public:
 
     // Distribution alignment
     virtual void AlignWith( const elem::DistData<Int>& data );
-    virtual void AlignWith( const AbstractDistMatrix<T,Int>& A );
+    virtual void AlignWith( const AutoDistMatrix<Int>& A );
     virtual void AlignColsWith( const elem::DistData<Int>& data );
-    virtual void AlignColsWith( const AbstractDistMatrix<T,Int>& A );
+    virtual void AlignColsWith( const AutoDistMatrix<Int>& A );
 
     //
     // Though the following routines are meant for complex data, all but two
@@ -151,10 +161,10 @@ public:
     bool AlignedWithDiagonal
     ( const elem::DistData<Int>& data, Int offset=0 ) const;
     bool AlignedWithDiagonal
-    ( const AbstractDistMatrix<T,Int>& A, Int offset=0 ) const;
+    ( const Auto& A, Int offset=0 ) const;
 
     void AlignWithDiagonal( const elem::DistData<Int>& data, Int offset=0 );
-    void AlignWithDiagonal( const AbstractDistMatrix<T,Int>& A, Int offset=0 );
+    void AlignWithDiagonal( const Auto& A, Int offset=0 );
 
     // (Immutable) view of a distributed matrix's buffer
     void Attach

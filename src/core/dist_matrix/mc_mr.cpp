@@ -119,8 +119,7 @@ DistMatrix<T,MC,MR,Int>::DistMatrix( const DistMatrix<T,U,V,Int>& A )
 #ifndef RELEASE
     PushCallStack("DistMatrix[MC,MR]::DistMatrix");
 #endif
-    if( MC != U || MR != V ||
-        reinterpret_cast<const DistMatrix<T,MC,MR,Int>*>(&A) != this )
+    if( reinterpret_cast<const DistMatrix<T,MC,MR,Int>*>(&A) != this )
         *this = A;
     else
         throw std::logic_error("Tried to construct [MC,MR] with itself");
@@ -244,7 +243,7 @@ DistMatrix<T,MC,MR,Int>::AlignWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,MC,MR,Int>::AlignWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,MC,MR,Int>::AlignWith( const AutoDistMatrix<Int>& A )
 { this->AlignWith( A.DistData() ); }
 
 template<typename T,typename Int>
@@ -277,7 +276,7 @@ DistMatrix<T,MC,MR,Int>::AlignColsWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,MC,MR,Int>::AlignColsWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,MC,MR,Int>::AlignColsWith( const AutoDistMatrix<Int>& A )
 { this->AlignColsWith( A.DistData() ); }
 
 template<typename T,typename Int>
@@ -310,7 +309,7 @@ DistMatrix<T,MC,MR,Int>::AlignRowsWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,MC,MR,Int>::AlignRowsWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,MC,MR,Int>::AlignRowsWith( const AutoDistMatrix<Int>& A )
 { this->AlignRowsWith( A.DistData() ); }
 
 template<typename T,typename Int>

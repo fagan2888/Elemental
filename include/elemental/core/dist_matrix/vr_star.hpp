@@ -21,6 +21,16 @@ template<typename T,typename Int>
 class DistMatrix<T,VR,STAR,Int> : public AbstractDistMatrix<T,Int>
 {
 public:
+	typedef DistMatrix<T,VR,STAR,Int> Self;
+	typedef DistMatrix<typename Base<T>::type,VR,STAR,Int> RSelf;
+	typedef AbstractDistMatrix<T,Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	
+	ScalarTypes DataType() const { return ScalarType<T>::Enum; }
+	Distribution RowDist() const { return VR; }
+	Distribution ColDist() const { return STAR; }
+	Distribution2D Dist2D() const { return VR_STAR; }
+	
     // Create a 0 x 0 distributed matrix
     DistMatrix( const elem::Grid& g=DefaultGrid() );
 
@@ -113,27 +123,22 @@ public:
     virtual void Set( Int i, Int j, T alpha );
     virtual void Update( Int i, Int j, T alpha );
 
+    virtual typename Base<T>::type GetRealPart( Int i, Int j ) const;
+    virtual void SetRealPart( Int i, Int j, typename Base<T>::type u );
+    virtual void UpdateRealPart( Int i, Int j, typename Base<T>::type u );
+
+    // Only valid for complex data
+    virtual typename Base<T>::type GetImagPart( Int i, Int j ) const;
+    virtual void SetImagPart( Int i, Int j, typename Base<T>::type u );
+    virtual void UpdateImagPart( Int i, Int j, typename Base<T>::type u );
+
     virtual void ResizeTo( Int height, Int width );
 
     // Distribution alignment
     virtual void AlignWith( const elem::DistData<Int>& data );
-    virtual void AlignWith( const AbstractDistMatrix<T,Int>& A );
+    virtual void AlignWith( const AutoDistMatrix<Int>& A );
     virtual void AlignColsWith( const elem::DistData<Int>& data );
-    virtual void AlignColsWith( const AbstractDistMatrix<T,Int>& A );
-
-    //
-    // Though the following routines are meant for complex data, all but two
-    // logically applies to real data.
-    //
-
-    virtual typename Base<T>::type GetRealPart( Int i, Int j ) const;
-    virtual typename Base<T>::type GetImagPart( Int i, Int j ) const;
-    virtual void SetRealPart( Int i, Int j, typename Base<T>::type u );
-    // Only valid for complex data
-    virtual void SetImagPart( Int i, Int j, typename Base<T>::type u );
-    virtual void UpdateRealPart( Int i, Int j, typename Base<T>::type u );
-    // Only valid for complex data
-    virtual void UpdateImagPart( Int i, Int j, typename Base<T>::type u );
+    virtual void AlignColsWith( const AutoDistMatrix<Int>& A );
 
     //------------------------------------------------------------------------//
     // Routines specific to [VR,* ] distribution                              //

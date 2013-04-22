@@ -19,7 +19,17 @@ template<typename T,typename Int>
 class DistMatrix<T,STAR,STAR,Int> : public AbstractDistMatrix<T,Int>
 {
 public:
-    // Create a 0 x 0 distributed matrix
+	typedef DistMatrix<T,STAR,STAR,Int> Self;
+	typedef DistMatrix<typename Base<T>::type,STAR,STAR,Int> RSelf;
+	typedef AbstractDistMatrix<T,Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	
+	ScalarTypes DataType() const { return ScalarType<T>::Enum; }
+	Distribution RowDist() const { return STAR; }
+	Distribution ColDist() const { return STAR; }
+	Distribution2D Dist2D() const { return STAR_STAR; }
+	
+	// Create a 0 x 0 distributed matrix
     DistMatrix( const elem::Grid& g=DefaultGrid() );
 
     // Create a height x width distributed matrix

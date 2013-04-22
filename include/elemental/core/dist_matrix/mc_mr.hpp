@@ -22,6 +22,16 @@ template<typename T,typename Int>
 class DistMatrix<T,MC,MR,Int> : public AbstractDistMatrix<T,Int>
 {
 public:
+	typedef DistMatrix<T,MC,MR,Int> Self;
+	typedef DistMatrix<typename Base<T>::type,MC,MR,Int> RSelf;
+	typedef AbstractDistMatrix<T,Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	
+	ScalarTypes DataType() const { return ScalarType<T>::Enum; }
+	Distribution RowDist() const { return MC; }
+	Distribution ColDist() const { return MR; }
+	Distribution2D Dist2D() const { return MC_MR; }
+	
     // Create a 0 x 0 distributed matrix
     DistMatrix( const elem::Grid& g=DefaultGrid() );
 
@@ -52,9 +62,9 @@ public:
 
     // Create a copy of distributed matrix A
     DistMatrix( const DistMatrix<T,MC,MR,Int>& A );
+    
     template<Distribution U,Distribution V>
     DistMatrix( const DistMatrix<T,U,V,Int>& A );
-
     ~DistMatrix();
 
     const DistMatrix<T,MC,MR,Int>& 
@@ -104,43 +114,38 @@ public:
     // Non-collective routines
     //
 
-    virtual Int ColStride() const;
-    virtual Int RowStride() const;
-    virtual Int ColRank() const;
-    virtual Int RowRank() const;
-    virtual elem::DistData<Int> DistData() const;
+    Int ColStride() const;
+    Int RowStride() const;
+    Int ColRank() const;
+    Int RowRank() const;
+    elem::DistData<Int> DistData() const;
 
     //
     // Collective routines
     //
 
-    virtual T Get( Int i, Int j ) const;
-    virtual void Set( Int i, Int j, T alpha );
-    virtual void Update( Int i, Int j, T alpha );
+    T Get( Int i, Int j ) const;
+    void Set( Int i, Int j, T alpha );
+    void Update( Int i, Int j, T alpha );
 
-    virtual void ResizeTo( Int height, Int width );
+    typename Base<T>::type GetRealPart( Int i, Int j ) const;
+    void SetRealPart( Int i, Int j, typename Base<T>::type u );
+    void UpdateRealPart( Int i, Int j, typename Base<T>::type u );
+
+    // Only valid for complex data
+    typename Base<T>::type GetImagPart( Int i, Int j ) const;
+    void SetImagPart( Int i, Int j, typename Base<T>::type u );
+    void UpdateImagPart( Int i, Int j, typename Base<T>::type u );
+
+    void ResizeTo( Int height, Int width );
 
     // Distribution alignment
-    virtual void AlignWith( const elem::DistData<Int>& data );
-    virtual void AlignWith( const AbstractDistMatrix<T,Int>& A );
-    virtual void AlignColsWith( const elem::DistData<Int>& data );
-    virtual void AlignColsWith( const AbstractDistMatrix<T,Int>& A );
-    virtual void AlignRowsWith( const elem::DistData<Int>& data );
-    virtual void AlignRowsWith( const AbstractDistMatrix<T,Int>& A );
-
-    //
-    // Though the following routines are meant for complex data, all but two
-    // logically apply to real data.
-    //
-
-    virtual typename Base<T>::type GetRealPart( Int i, Int j ) const;
-    virtual typename Base<T>::type GetImagPart( Int i, Int j ) const;
-    virtual void SetRealPart( Int i, Int j, typename Base<T>::type u );
-    // Only valid for complex data
-    virtual void SetImagPart( Int i, Int j, typename Base<T>::type u );
-    virtual void UpdateRealPart( Int i, Int j, typename Base<T>::type u );
-    // Only valid for complex data
-    virtual void UpdateImagPart( Int i, Int j, typename Base<T>::type u );
+    void AlignWith( const elem::DistData<Int>& data );
+    void AlignWith( const AutoDistMatrix<Int>& A );
+    void AlignColsWith( const elem::DistData<Int>& data );
+    void AlignColsWith( const AutoDistMatrix<Int>& A );
+    void AlignRowsWith( const elem::DistData<Int>& data );
+    void AlignRowsWith( const AutoDistMatrix<Int>& A );
 
     //-----------------------------------------------------------------------//
     // Routines specific to [MC,MR] distribution                             //
@@ -223,7 +228,7 @@ public:
     ( const DistMatrix<typename Base<T>::type,STAR,MD,Int>& d, Int offset=0 );
 
 private:
-    virtual void PrintBase( std::ostream& os, const std::string msg="" ) const;
+    void PrintBase( std::ostream& os, const std::string msg="" ) const;
 
     template<typename S,Distribution U,Distribution V,typename N>
     friend class DistMatrix;

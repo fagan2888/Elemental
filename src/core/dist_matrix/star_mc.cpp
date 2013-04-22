@@ -181,7 +181,7 @@ DistMatrix<T,STAR,MC,Int>::AlignWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,STAR,MC,Int>::AlignWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,STAR,MC,Int>::AlignWith( const AutoDistMatrix<Int>& A )
 { this->AlignWith( A.DistData() ); }
 
 template<typename T,typename Int>
@@ -191,7 +191,7 @@ DistMatrix<T,STAR,MC,Int>::AlignRowsWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,STAR,MC,Int>::AlignRowsWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,STAR,MC,Int>::AlignRowsWith( const AutoDistMatrix<Int>& A )
 { this->AlignWith( A.DistData() ); }
 
 template<typename T,typename Int>
@@ -238,7 +238,7 @@ DistMatrix<T,STAR,MC,Int>::AlignedWithDiagonal
 template<typename T,typename Int>
 bool
 DistMatrix<T,STAR,MC,Int>::AlignedWithDiagonal
-( const AbstractDistMatrix<T,Int>& A, Int offset ) const
+( const AutoDistMatrix<Int>& A, Int offset ) const
 { return this->AlignedWithDiagonal( A.DistData(), offset ); }
 
 template<typename T,typename Int>
@@ -280,7 +280,7 @@ DistMatrix<T,STAR,MC,Int>::AlignWithDiagonal
 template<typename T,typename Int>
 void
 DistMatrix<T,STAR,MC,Int>::AlignWithDiagonal
-( const AbstractDistMatrix<T,Int>& A, Int offset )
+( const AutoDistMatrix<Int>& A, Int offset )
 { this->AlignWithDiagonal( A.DistData(), offset ); }
 
 template<typename T,typename Int>

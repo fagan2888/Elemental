@@ -240,7 +240,7 @@ DistMatrix<T,MR,MC,Int>::AlignWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,MR,MC,Int>::AlignWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,MR,MC,Int>::AlignWith( const AutoDistMatrix<Int>& A )
 { this->AlignWith( A.DistData() ); }
 
 template<typename T,typename Int>
@@ -273,7 +273,7 @@ DistMatrix<T,MR,MC,Int>::AlignColsWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,MR,MC,Int>::AlignColsWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,MR,MC,Int>::AlignColsWith( const AutoDistMatrix<Int>& A )
 { this->AlignColsWith( A.DistData() ); }
 
 template<typename T,typename Int>
@@ -306,7 +306,7 @@ DistMatrix<T,MR,MC,Int>::AlignRowsWith( const elem::DistData<Int>& data )
 
 template<typename T,typename Int>
 void
-DistMatrix<T,MR,MC,Int>::AlignRowsWith( const AbstractDistMatrix<T,Int>& A )
+DistMatrix<T,MR,MC,Int>::AlignRowsWith( const AutoDistMatrix<Int>& A )
 { this->AlignRowsWith( A.DistData() ); }
 
 template<typename T,typename Int>

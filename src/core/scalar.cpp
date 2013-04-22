@@ -23,88 +23,41 @@ void TypeCastError( ScalarTypes A, ScalarTypes B )
 	throw std::logic_error( "enum::Scalar: cannot cast between types" );
 }
 
-template <typename T,typename Int> inline
-T Cast_( const Scalar<Int>& s )
-{
-	return TypeCastError( s.type_, ScalarType<T,Int>::Enum );
-}
-
-template <>
-int Cast_<int,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:       TypeCastError( s.Type(), INTEGRAL );
-	case INTEGRAL: return s.Get<int>();
-	}
-}
-
-template <>
-float Cast_<float,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:        TypeCastError( s.Type(), SINGLE );
-	case SINGLE:    return s.Get<float>();
-	}
-}
-
-template <>
-double Cast_<double,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:        TypeCastError( s.Type(), DOUBLE );
-	case INTEGRAL:  return s.Get<int>();
-	case SINGLE:    return s.Get<float>();
-	case DOUBLE:    return s.Get<double>();
-	}
-} 
-
-template <>
-scomplex Cast_<scomplex,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:       TypeCastError( s.Type(), SCOMPLEX );
-	case SINGLE:   return s.Get<float>();
-	case SCOMPLEX: return s.Get<scomplex>();
-	}
-}
-
-template <>
-dcomplex Cast_<dcomplex,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:        TypeCastError( s.Type(), DCOMPLEX );
-	case INTEGRAL:  return s.Get<int>();
-	case SINGLE:    return s.Get<float>();
-	case DOUBLE:    return s.Get<double>();
-	case SCOMPLEX:  return s.Get<scomplex>();
-	case DCOMPLEX:  return s.Get<dcomplex>();
-	}
-}
-
 template <typename Int>
-template <typename T> inline
-T 
-Scalar<Int>::Cast() const
+void Scalar<Int>::Print( std::ostream& ostr ) const
 {
-	AssertTypeKnown( ScalarType<T,Int>::Enum );
-	return Cast_<T,Int>( *this );
+	switch ( type_ ) {
+	case INTEGRAL: ostr << "Scalar( Integer, " << Get_<Int>() << " )"; break;
+#ifndef DISABLE_FLOAT	
+	case SINGLE:   ostr << "Scalar( Float, " << Get_<float>() << " )"; break;
+#endif
+	case DOUBLE:   ostr << "Scalar( Double, " << Get_<double>() << " )"; break;
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT	
+	case SCOMPLEX: ostr << "Scalar( SComplex, (" << Get_<scomplex>().real << "," << Get_<scomplex>().imag << ") )"; break;
+#endif
+	case DCOMPLEX: ostr << "Scalar( DComplex, (" << Get_<dcomplex>().real << "," << Get_<dcomplex>().imag << ") )"; break;
+#endif
+	default: ostr << "Scalar( Unknown, * )"; break;
+	}
 }
 
+template struct ScalarType<int,int>;
+template struct ScalarEnum<INTEGRAL,int>;
 template class Scalar<int>;
-template int& Scalar<int>::Set<int>();
-template const int& Scalar<int>::Get<int>() const;
-template int Scalar<int>::Cast<int>() const;
-template float& Scalar<int>::Set<float>();
-template const float& Scalar<int>::Get<float>() const;
-template float Scalar<int>::Cast<float>() const;
-template double& Scalar<int>::Set<double>();
-template const double& Scalar<int>::Get<double>() const;
-template double Scalar<int>::Cast<double>() const;
-template scomplex& Scalar<int>::Set<scomplex>();
-template const scomplex& Scalar<int>::Get<scomplex>() const;
-template scomplex Scalar<int>::Cast<scomplex>() const;
-template dcomplex& Scalar<int>::Set<dcomplex>();
-template const dcomplex& Scalar<int>::Get<dcomplex>() const;
-template dcomplex Scalar<int>::Cast<dcomplex>() const;
+#ifndef DISABLE_FLOAT
+template struct ScalarType<float,int>;
+template struct ScalarEnum<SINGLE,int>;
+#endif
+template struct ScalarType<double,int>;
+template struct ScalarEnum<DOUBLE,int>;
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+template struct ScalarType<scomplex,int>;
+template struct ScalarType<std::complex<float>,int>;
+#endif
+template struct ScalarType<dcomplex,int>;
+template struct ScalarType<std::complex<double>,int>;
+#endif
 
 } // namespace elem

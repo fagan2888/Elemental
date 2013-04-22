@@ -21,17 +21,10 @@
 namespace elem {
 
 template <typename T,typename Int> inline
-ScalarTypes Matrix<T,Int>::DataType() const { return ScalarType<T>::Enum; }
+ScalarTypes Matrix<T,Int>::DataType() const 
+{ return ScalarType<T>::Enum; }
 
-template <typename Int>
-void AutoMatrix<Int>::AssertDataTypes( const Self& BB, bool unknown_ok ) const
-{ AssertDataTypes( BB.DataType(), unknown_ok ); }
-
-template <typename Int>
-void AutoMatrix<Int>::AssertCRDataTypes( const Self& BB, bool unknown_ok ) const
-{ AssertDataTypes( BB.DataType(), unknown_ok ); }
-
-template<typename Int> inline
+template <typename Int> inline
 Int AutoMatrix<Int>::Height() const
 { return height_;  }
 
@@ -274,7 +267,7 @@ void Matrix<T,Int>::LockedAttach( Int height, Int width, const T* buffer, Int ld
 { PARENT(Attach)( DataType(), height, width, buffer, ldim, true ); }
 
 template <typename Int> inline
-const AutoMatrix<Int>& AutoMatrix<Int>::operator=( const Self& A ) 
+AutoMatrix<Int>& AutoMatrix<Int>::operator=( const Self& A ) 
 { CopyFrom( A ); return *this; }
 
 template <typename T,typename Int> inline
@@ -282,7 +275,7 @@ void Matrix<T,Int>::CopyFrom( const Self& A )
 { PARENT(CopyFrom)( A ); }
 
 template <typename T,typename Int> inline
-const Matrix<T,Int>& Matrix<T,Int>::operator=( const Self& A ) 
+Matrix<T,Int>& Matrix<T,Int>::operator=( const Self& A ) 
 { CopyFrom( A ); return *this; }
 
 template <typename T,typename Int> inline

@@ -20,113 +20,84 @@ SafeProduct<F,Int>::SafeProduct( Int numEntries )
 
 namespace data_type_wrapper {
 
-template <typename T,enum ScalarTypes S,typename Int>
-const char* ScalarTypeBase<T,S,Int>::Name = "Unknown";
-
-template <typename Int>
-struct ScalarTypeBase<Int,INTEGRAL,Int> {
-	typedef Int Self;
-	typedef Int Real;
-	static const ScalarTypes Enum = INTEGRAL;
-	static const char* Name;
-	static const bool isComplex = false;
-	static const bool canBeComplex = false;
-};
-
-template <typename Int>
-const char* ScalarTypeBase<Int,INTEGRAL,Int>::Name = "Integral";
-
-template <typename Int>
-struct ScalarType<Int,Int> : public ScalarTypeBase<Int,INTEGRAL,Int> {};
-
-template <typename Int>
-struct ScalarEnum<INTEGRAL,Int> : public ScalarTypeBase<Int,INTEGRAL,Int> {};
-
+#define SCALARSETUP(TYPE,RTYPE,ENUM,ISCPLX,CCPLX) \
+	template <typename Int> \
+	struct ScalarTypeBase<TYPE,ENUM,Int> { \
+		typedef TYPE Type; \
+		typedef TYPE RealType; \
+		typedef Int IntegralType; \
+		static const size_t SizeOf = sizeof(TYPE); \
+		static const ScalarTypes Enum = ENUM; \
+		static const bool isValid = true; \
+		static const bool isComplex = ISCPLX; \
+		static const bool canBeComplex = CCPLX; \
+	};
+	
+SCALARSETUP(Int,Int,INTEGRAL,false,false)
 #ifndef DISABLE_FLOAT
-template <typename Int>
-struct ScalarTypeBase<float,SINGLE,Int> {
-	typedef float Type;
-	typedef float Real;
-	static const ScalarTypes Enum = SINGLE;
-	static const char* Name;
-	static const bool isComplex = false;
-	static const bool canBeComplex = true;
-};
-
-template <typename Int>
-const char* ScalarTypeBase<float,SINGLE,Int>::Name = "Single";
-
-template <typename Int>
-struct ScalarType<float,Int> : public ScalarTypeBase<float,SINGLE,Int> {};
-
-template <typename Int>
-struct ScalarEnum<SINGLE,Int> : public ScalarTypeBase<float,SINGLE,Int> {};
+SCALARSETUP(float,float,SINGLE,false,true)
 #endif
-
-template <typename Int>
-struct ScalarTypeBase<double,DOUBLE,Int> {
-	typedef double Type;
-	typedef double Real;
-	static const ScalarTypes Enum = DOUBLE;
-	static const char* Name;
-	static const bool isComplex = false;
-	static const bool canBeComplex = true;
-};
-
-template <typename Int>
-const char* ScalarTypeBase<double,DOUBLE,Int>::Name = "Double";
-
-template <typename Int>
-struct ScalarType<double,Int> : public ScalarTypeBase<double,DOUBLE,Int> {};
-
-template <typename Int>
-struct ScalarEnum<DOUBLE,Int> : public ScalarTypeBase<double,DOUBLE,Int> {};
-
+SCALARSETUP(double,double,DOUBLE,false,true)
 #ifndef DISABLE_COMPLEX
 #ifndef DISABLE_FLOAT
+SCALARSETUP(scomplex,float,SCOMPLEX,true,false)
 template <typename Int>
-struct ScalarTypeBase<scomplex,SCOMPLEX,Int> {
-	typedef scomplex Type;
-	typedef float Real;
-	static const ScalarTypes Enum = SCOMPLEX;
-	static const char* Name;
-	static const bool isComplex = true;
-	static const bool canBeComplex = false;
-};
-
+struct ScalarType<std::complex<float>,Int> : public ScalarTypeBase<scomplex,SCOMPLEX,Int> {};
+#endif
+SCALARSETUP(dcomplex,double,DCOMPLEX,true,false)
 template <typename Int>
-const char* ScalarTypeBase<scomplex,SCOMPLEX,Int>::Name = "SComplex";
-
-template <typename Int>
-struct ScalarType<scomplex,Int> : public ScalarTypeBase<scomplex,SCOMPLEX,Int> {};
-
-template <typename Int>
-struct ScalarEnum<SCOMPLEX,Int> : public ScalarTypeBase<scomplex,SCOMPLEX,Int> {};
+struct ScalarType<std::complex<double>,Int> : public ScalarTypeBase<dcomplex,DCOMPLEX,Int> {};
 #endif
 
-template <typename Int>
-struct ScalarTypeBase<dcomplex,DCOMPLEX,Int> {
-	typedef dcomplex Type;
-	typedef double Real;
-	static const ScalarTypes Enum = DCOMPLEX;
-	static const char* Name;
-	static const bool isComplex = true;
-	static const bool canBeComplex = false;
-};
+#undef SCALARSETUP
 
-template <typename Int>
-const char* ScalarTypeBase<dcomplex,DCOMPLEX,Int>::Name = "SComplex";
-
-template <typename Int>
-struct ScalarType<dcomplex,Int> : public ScalarTypeBase<dcomplex,SCOMPLEX,Int> {};
-
-template <typename Int>
-struct ScalarEnum<DCOMPLEX,Int> : public ScalarTypeBase<dcomplex,SCOMPLEX,Int> {};
+inline std::string
+ScalarTypeToString( ScalarTypes stype )
+{
+    switch( stype )
+    {
+    	case INTEGRAL:  return "Integral";
+#ifndef DISABLE_FLOAT   	
+    	case SINGLE:    return "Single";
 #endif
+    	case DOUBLE:    return "Double";
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+    	case SCOMPLEX:  return "SComplex";
+#endif
+    	case DCOMPLEX:  return "DComplex";
+#endif
+    	default:        return "Unknown";
+    }
+}
 
 } // namespace data_type_wrapper
 
 namespace distribution_wrapper {
+
+#define DISTSETUP(U,V,UN,VN) \
+	const char* const T_ ## U ## _ ## V = #UN "_" #VN; \
+	template <> \
+	struct DistMapBase<U,V,U ## _ ## V> { \
+		static const Distribution RowDist = U; \
+		static const Distribution ColDist = V; \
+		static const Distribution2D Dist2D = U ## _ ## V; \
+		static const bool isValid = true; \
+	};
+DISTSETUP(MC,MR,MC,MR)
+DISTSETUP(MC,STAR,MC,*)
+DISTSETUP(MD,STAR,MD,*)
+DISTSETUP(MR,MC,MR,MC)
+DISTSETUP(MR,STAR,MR,*)
+DISTSETUP(STAR,MC,*,MC)
+DISTSETUP(STAR,MD,*,MD)
+DISTSETUP(STAR,MR,*,MR)
+DISTSETUP(STAR,STAR,*,*)
+DISTSETUP(STAR,VC,*,VC)
+DISTSETUP(STAR,VR,*,VR)
+DISTSETUP(VC,STAR,VC,*)
+DISTSETUP(VR,STAR,VR,*)
+#undef DISTSETUP
 
 inline std::string 
 DistToString( Distribution distribution )
@@ -142,6 +113,27 @@ DistToString( Distribution distribution )
         default: distString = "* "; break;
     }
     return distString;
+}
+
+inline std::string
+Dist2DToString( Distribution2D dist2D )
+{
+	switch ( dist2D )
+	{
+		case MC_MR:      return "MC_MR";
+		case MC_STAR:    return "MC_STAR";
+		case MD_STAR:    return "MD_STAR";
+		case MR_MC:      return "MR_MC";
+		case MR_STAR:    return "MR_STAR";
+		case STAR_MC:    return "STAR_MC";
+		case STAR_MD:    return "STAR_MD";
+		case STAR_MR:    return "STAR_MR";
+		case STAR_STAR:  return "STAR_STAR";
+		case STAR_VC:    return "STAR_VC";
+		case STAR_VR:    return "STAR_VR";
+		case VC_STAR:	 return "VC_STAR";
+		case VR_STAR:    return "VR_STAR";
+	}
 }
 
 inline Distribution 

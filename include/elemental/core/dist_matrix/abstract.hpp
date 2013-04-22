@@ -12,199 +12,120 @@
 
 namespace elem {
 
-#ifndef RELEASE
-template<typename T,typename Int>
-void AssertConforming1x2
-( const AbstractDistMatrix<T,Int>& AL, const AbstractDistMatrix<T,Int>& AR );
-
-template<typename T,typename Int>
-void AssertConforming2x1
-( const AbstractDistMatrix<T,Int>& AT,
-  const AbstractDistMatrix<T,Int>& AB );
-
-template<typename T,typename Int>
-void AssertConforming2x2
-( const AbstractDistMatrix<T,Int>& ATL, const AbstractDistMatrix<T,Int>& ATR,
-  const AbstractDistMatrix<T,Int>& ABL, const AbstractDistMatrix<T,Int>& ABR );
-#endif // ifndef RELEASE
-
 template<typename T,typename Int> 
-class AbstractDistMatrix
+class AbstractDistMatrix : public AutoDistMatrix<Int>
 {
 public:
-    virtual ~AbstractDistMatrix();
+	typedef typename Base<T>::type RT;
+	typedef AbstractDistMatrix<T,Int> Self;
+	typedef AutoDistMatrix<Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	
+	ScalarTypes DataType() const;
+    virtual Distribution RowDist() const = 0;
+    virtual Distribution ColDist() const = 0;
+    virtual Distribution2D Dist2D() const = 0;
 
-    //-----------------------------------------------------------------------//
-    // Routines that do NOT need to be implemented in derived classes        //
-    //-----------------------------------------------------------------------//
-
-#ifndef RELEASE
-    void AssertNotLocked() const;
-    void AssertNotStoringData() const;
-    void AssertValidEntry( Int i, Int j ) const;
-    void AssertValidSubmatrix( Int i, Int j, Int height, Int width ) const;
-    void AssertFreeColAlignment() const;
-    void AssertFreeRowAlignment() const;
-    void AssertSameGrid( const elem::Grid& grid ) const;
-    void AssertSameSize( int height, int width ) const;
-#endif // ifndef RELEASE
-
-    //
-    // Basic information
-    //
-
-    Int Height() const;
-    Int Width() const;
-    Int DiagonalLength( Int offset=0 ) const;
-    Int LocalHeight() const;
-    Int LocalWidth() const;
-    Int LDim() const;
-    size_t AllocatedMemory() const;
-
-    const elem::Grid& Grid() const;
-
-          T* Buffer( Int iLocal=0, Int jLocal=0 );
-    const T* LockedBuffer( Int iLocal=0, Int jLocal=0 ) const;
+          T* Buffer();
+          T* Buffer( Int iLocal, Int jLocal );
+          
+    const T* LockedBuffer( Int iLocal, Int jLocal ) const;
+    const T* LockedBuffer() const;
 
           elem::Matrix<T,Int>& Matrix();
     const elem::Matrix<T,Int>& LockedMatrix() const;
 
-    //
-    // I/O
-    //
-
-    void Print( const std::string msg="" ) const;
-    void Print( std::ostream& os, const std::string msg="" ) const;
-    void Write( const std::string filename, const std::string msg="" ) const;
-
-    //
-    // Alignments
-    //
-
-    void FreeAlignments();
-    bool ConstrainedColAlignment() const;
-    bool ConstrainedRowAlignment() const;
-    Int ColAlignment() const;
-    Int RowAlignment() const;
-    Int ColShift() const;
-    Int RowShift() const;
-
+	template <Distribution U,Distribution V> DistMatrix<T,U,V,Int>& Cast();
+	template <Distribution U,Distribution V> const DistMatrix<T,U,V,Int>& Cast() const;
+	
     void Align( Int colAlignment, Int rowAlignment );
     void AlignCols( Int colAlignment );
     void AlignRows( Int rowAlignment );
 
     //
-    // Local entry manipulation
+    // Entry manipulation: auto class implementation
     //
 
-    T GetLocal( Int iLocal, Int jLocal ) const;
-    void SetLocal( Int iLocal, Int jLocal, T alpha );
-    void UpdateLocal( Int iLocal, Int jLocal, T alpha );
+    void Get( Int i, Int j, Scalar<Int>& alpha ) const;
+    void Set( Int i, Int j, const Scalar<Int>& alpha );
+    void Update( Int i, Int j, const Scalar<Int>& alpha );
+
+    void GetRealPart( Int i, Int j, Scalar<Int>& alpha ) const;
+    void SetRealPart( Int i, Int j, const Scalar<Int>& alpha );
+    void UpdateRealPart( Int i, Int j, const Scalar<Int>& alpha );
+
+    void GetImagPart( Int i, Int j, Scalar<Int>& alpha ) const;
+    void SetImagPart( Int i, Int j, const Scalar<Int>& alpha );
+    void UpdateImagPart( Int i, Int j, const Scalar<Int>& alpha );
 
     //
-    // Though the following routines are meant for complex data, all but two
-    // logically applies to real data.
-    //
-
-    typename Base<T>::type GetLocalRealPart( Int iLocal, Int jLocal ) const;
-    typename Base<T>::type GetLocalImagPart( Int iLocal, Int jLocal ) const;
-    void SetLocalRealPart
-    ( Int iLocal, Int jLocal, typename Base<T>::type alpha );
-    void UpdateLocalRealPart
-    ( Int iLocal, Int jLocal, typename Base<T>::type alpha );
-    // Only valid for complex data
-    void SetLocalImagPart
-    ( Int iLocal, Int jLocal, typename Base<T>::type alpha );
-    void UpdateLocalImagPart
-    ( Int iLocal, Int jLocal, typename Base<T>::type alpha );
-
-    //
-    // Viewing 
-    //
-
-    bool Viewing() const;
-    bool Locked() const;
-
-    //
-    // Utilities
-    //
-
-    void Empty();
-    void EmptyData();
-    void SetGrid( const elem::Grid& grid );
-
-    //------------------------------------------------------------------------//
-    // Routines that can be overridden in derived classes                     //
-    //------------------------------------------------------------------------//
-
-    virtual bool Participating() const;
-    virtual void AlignWith( const elem::DistData<Int>& data );
-    virtual void AlignWith( const AbstractDistMatrix<T,Int>& A );
-    virtual void AlignColsWith( const elem::DistData<Int>& data );
-    virtual void AlignColsWith( const AbstractDistMatrix<T,Int>& A );
-    virtual void AlignRowsWith( const elem::DistData<Int>& data );
-    virtual void AlignRowsWith( const AbstractDistMatrix<T,Int>& A );
-
-    //------------------------------------------------------------------------//
-    // Routines that MUST be implemented in non-abstract derived classes      //
-    //------------------------------------------------------------------------//
-
-    //
-    // Basic information
-    //
-
-    virtual elem::DistData<Int> DistData() const = 0;
-
-    // So that the local row indices are given by
-    //   A.ColShift():A.ColStride():A.Height()
-    virtual Int ColStride() const = 0; 
-    // So that the local column indices are given by
-    //   A.RowShift():A.RowStride():A.Width()
-    virtual Int RowStride() const = 0;
-    virtual Int ColRank() const = 0;
-    virtual Int RowRank() const = 0;
-
-    //
-    // Entry manipulation
+    // Global entry manipulation
     //
 
     virtual T Get( Int i, Int j ) const = 0;
     virtual void Set( Int i, Int j, T alpha ) = 0;
     virtual void Update( Int i, Int j, T alpha ) = 0;
 
-    //
-    // Though the following routines are meant for complex data, all but two
-    // logically applies to real data.
-    //
+    virtual RT GetRealPart( Int i, Int j ) const = 0;
+    virtual void SetRealPart( Int i, Int j, typename Base<T>::type u ) = 0;
+    virtual void UpdateRealPart( Int i, Int j, typename Base<T>::type u ) = 0;
 
-    virtual typename Base<T>::type GetRealPart( Int i, Int j ) const = 0;
-    virtual typename Base<T>::type GetImagPart( Int i, Int j ) const = 0;
-    virtual void SetRealPart( Int i, Int j, typename Base<T>::type alpha ) = 0;
     // Only valid for complex data
-    virtual void SetImagPart( Int i, Int j, typename Base<T>::type alpha ) = 0;
-    virtual void UpdateRealPart
-    ( Int i, Int j, typename Base<T>::type alpha ) = 0;
-    // Only valid for complex data
-    virtual void UpdateImagPart
-    ( Int i, Int j, typename Base<T>::type alpha ) = 0;
+    virtual RT GetImagPart( Int i, Int j ) const = 0;
+    virtual void SetImagPart( Int i, Int j, typename Base<T>::type u ) = 0;
+    virtual void UpdateImagPart( Int i, Int j, typename Base<T>::type u ) = 0;
 
     //
-    // Utilities
+    // Local entry manipulation
     //
     
-    virtual void ResizeTo( Int height, Int width ) = 0;
+    T GetLocal( Int iLocal, Int jLocal ) const;
+    void SetLocal( Int iLocal, Int jLocal, T alpha );
+    void UpdateLocal( Int iLocal, Int jLocal, T alpha );
 
+    typename Base<T>::type GetLocalRealPart( Int iLocal, Int jLocal ) const;
+    void SetLocalRealPart( Int iLocal, Int jLocal, typename Base<T>::type  alpha );
+    void UpdateLocalRealPart( Int iLocal, Int jLocal, typename Base<T>::type  alpha );
+
+    typename Base<T>::type GetLocalImagPart( Int iLocal, Int jLocal ) const;
+    void SetLocalImagPart( Int iLocal, Int jLocal, typename Base<T>::type  alpha );
+    void UpdateLocalImagPart( Int iLocal, Int jLocal, typename Base<T>::type alpha );
+    
+    //
+    // Copying
+    //
+
+	Self& operator=( const Self& );    
+	Self& operator=( const Parent& );
+	void CopyFrom( const Self& );
+	void CopyFrom( const Parent& );
+	
+public:
+	// Not for public use.
+	template <Distribution U,Distribution V> DistMatrix<T,U,V,Int>& Cast_();
+	template <Distribution U,Distribution V> const DistMatrix<T,U,V,Int>& Cast_() const;
+    
 protected:
-    bool viewing_, locked_;
-    Int height_, width_;
     Memory<T> auxMemory_;
     elem::Matrix<T,Int> matrix_;
     
-    bool constrainedColAlignment_, constrainedRowAlignment_;
-    Int colAlignment_, rowAlignment_;
-    Int colShift_, rowShift_;
-    const elem::Grid* grid_;
-
+    friend class AutoDistMatrix<Int>;
+    void CopyFrom_( const Auto& A ); // virtual implementation
+    
+    virtual const Self& operator=( const DistMatrix<T,MC,MR,Int>&     A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,MC,STAR,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,MD,STAR,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,MR,MC,Int>&     A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,MR,STAR,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,STAR,MC,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,STAR,MD,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,STAR,MR,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,STAR,STAR,Int>& A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,STAR,VC,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,STAR,VR,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,VC,STAR,Int>&   A ) = 0;
+    virtual const Self& operator=( const DistMatrix<T,VR,STAR,Int>&   A ) = 0;
+    
     // Initialize with particular local dimensions
     AbstractDistMatrix
     ( Int height, Int width,
@@ -243,63 +164,20 @@ protected:
       T* buffer,
       Int ldim,
       const elem::Grid& g );
+};
 
-protected:
-    void SetShifts();
-    void SetColShift();
-    void SetRowShift();
-    void SetGrid();
-
-    virtual void PrintBase( std::ostream& os, const std::string msg ) const = 0;
-
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void View
-    ( DistMatrix<S,U,V,Ord>& A, DistMatrix<S,U,V,Ord>& B );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void LockedView
-    ( DistMatrix<S,U,V,Ord>& A, const DistMatrix<S,U,V,Ord>& B );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void View
-    ( DistMatrix<S,U,V,Ord>& A, DistMatrix<S,U,V,Ord>& B,
-      Ord i, Ord j, Ord height, Ord width );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void LockedView
-    ( DistMatrix<S,U,V,Ord>& A, const DistMatrix<S,U,V,Ord>& B,
-      Ord i, Ord j, Ord height, Ord width );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void View1x2
-    ( DistMatrix<S,U,V,Ord>& A,
-      DistMatrix<S,U,V,Ord>& BL, DistMatrix<S,U,V,Ord>& BR );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void LockedView1x2
-    (       DistMatrix<S,U,V,Ord>& A,
-      const DistMatrix<S,U,V,Ord>& BL,
-      const DistMatrix<S,U,V,Ord>& BR );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void View2x1
-    ( DistMatrix<S,U,V,Ord>& A,
-      DistMatrix<S,U,V,Ord>& BT,
-      DistMatrix<S,U,V,Ord>& BB );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void LockedView2x1
-    (       DistMatrix<S,U,V,Ord>& A,
-      const DistMatrix<S,U,V,Ord>& BT,
-      const DistMatrix<S,U,V,Ord>& BB );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void View2x2
-    ( DistMatrix<S,U,V,Ord>& A,
-      DistMatrix<S,U,V,Ord>& BTL, DistMatrix<S,U,V,Ord>& BTR,
-      DistMatrix<S,U,V,Ord>& BBL, DistMatrix<S,U,V,Ord>& BBR );
-    template<typename S,Distribution U,Distribution V,typename Ord> 
-    friend void LockedView2x2
-    (       DistMatrix<S,U,V,Ord>& A,
-      const DistMatrix<S,U,V,Ord>& BTL,
-      const DistMatrix<S,U,V,Ord>& BTR,
-      const DistMatrix<S,U,V,Ord>& BBL,
-      const DistMatrix<S,U,V,Ord>& BBR );
-
-    template<typename S,Distribution U,Distribution V,typename Ord>
-    friend class DistMatrix;
+template <typename T,Distribution U,Distribution V,typename Int>
+class DistMatrix : public AbstractDistMatrix<T,Int>
+{
+public:
+	typedef DistMatrix<T,MC,MR,Int> Self;
+	typedef DistMatrix<typename Base<T>::type,MC,MR,Int> RSelf;
+	typedef AbstractDistMatrix<T,Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	Distribution RowDist() const { return U; }
+	Distribution ColDist() const { return V; }
+    Self* CloneEmpty() const;
+	Self* Clone() const;    
 };
 
 } // namespace elem

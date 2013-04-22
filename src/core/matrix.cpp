@@ -16,6 +16,13 @@ namespace elem {
 //
 
 template <class Int>
+void AssertUnlocked( bool locked )
+{
+	if ( locked )
+		throw std::logic_error( "Expected an unlocked matrix here" );
+}
+
+template <class Int>
 void AssertNonnegative( Int i, const char* s )
 {
 	if ( i < 0 ) {
@@ -26,14 +33,14 @@ void AssertNonnegative( Int i, const char* s )
 }
 
 template <typename Int>
-static void AssertIndices( Int i, Int j )
+void AssertIndices( Int i, Int j )
 {
     if( i < 0 || j < 0 )
         throw std::logic_error("Indices must be non-negative");
 }
 
 template <typename Int>
-static void AssertBounds( Int i, Int j, Int height, Int width )
+void AssertValidEntry( Int i, Int j, Int height, Int width )
 {
     if( i < 0 || j < 0 )
         throw std::logic_error("Indices must be non-negative");
@@ -48,11 +55,7 @@ static void AssertBounds( Int i, Int j, Int height, Int width )
 }
 
 template <typename Int>
-void AutoMatrix<Int>::AssertBounds( Int i, Int j ) const
-{ elem::AssertBounds( i, j, height_, width_ ); }
-
-template <typename Int>
-static void AssertLDim( Int height, Int ldim )
+void AssertLDim( Int height, Int ldim )
 {
 	if ( ldim == 0 )
 		throw std::logic_error( "Leading dimension cannot be zero (for BLAS compatibility)" );
@@ -65,7 +68,7 @@ static void AssertLDim( Int height, Int ldim )
 }
 
 template <typename Int>
-static void AssertDimensions( Int height, Int width, Int ldim, bool zero_ok = false )
+void AssertDimensions( Int height, Int width, Int ldim, bool zero_ok )
 {
 	AssertNonnegative( height, "height" );
 	AssertNonnegative( width, "width" );
@@ -74,9 +77,9 @@ static void AssertDimensions( Int height, Int width, Int ldim, bool zero_ok = fa
 }
 
 template <typename Int>
-static void AssertView( Int i, Int j, Int height, Int width, Int height_, Int width_ )
+void AssertValidSubmatrix( Int i, Int j, Int height, Int width, Int height_, Int width_ )
 {
-	AssertBounds( i, j, height_, width_ );
+	AssertValidEntry( i, j, height_, width_ );
     if( (i+height) > height_ || (j+width) > width_ )
     {
         std::ostringstream msg;
@@ -88,10 +91,94 @@ static void AssertView( Int i, Int j, Int height, Int width, Int height_, Int wi
     }
 }
 
+static const char *TypeNames[] = {
+	"Integral",
+#ifndef DISABLE_FLOAT
+	"Single",
+#endif
+	"Double",
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+	"SComplex",
+#endif
+	"DComplex",
+#endif
+	"UNKNOWN"
+};
+
+static const ScalarTypes RealTypes[] = {
+	INTEGRAL,
+#ifndef DISABLE_FLOAT
+	SINGLE,
+#endif
+	DOUBLE,
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+	SINGLE,
+#endif
+	DOUBLE,
+#endif
+	UNKNOWN
+};
+
+static bool ComplexFlag[] = {
+	false,
+#ifndef DISABLE_FLOAT
+	false,
+#endif
+	false,
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+	true,
+#endif
+	true,
+#endif
+	false
+};
+
 template <typename Int>
-void AutoMatrix<Int>::AssertView( Int i, Int j, Int height, Int width ) const
-{ 
-	elem::AssertView( i, j, height, width, height_, width_ ); 
+void AssertDataTypes( ScalarTypes A, ScalarTypes B )
+{
+	if ( A != B ) 
+	{
+		std::ostringstream msg;
+		msg << "Matrix type mismach: " << TypeNames[A] << " != " << TypeNames[B];
+		throw std::logic_error( msg.str() );
+	}
+}
+
+template <typename Int>
+void AssertCRDataTypes( ScalarTypes A, ScalarTypes B, bool imag_bad )
+{
+	if ( RealTypes[A] != B ) {
+		std::ostringstream msg;
+		msg << "Data type mismatch: Real(" << TypeNames[A] << ") != " << TypeNames[B];
+		throw std::logic_error( msg.str() );
+	}
+	if ( imag_bad && !ComplexFlag[A] )
+		throw std::logic_error( "Cannot use this method with real data" );
+}
+
+template <typename Int>
+void AssertDataTypes( Int N, const AutoMatrix<Int>* A, ... )
+{
+	va_list arguments;
+	va_start( arguments, A );
+	ScalarTypes AType = A->DataType();
+	for ( Int k = 1 ; k < N ; ++k )
+		elem::AssertDataTypes( AType, va_arg( arguments, const AutoMatrix<Int>* )->DataType() );
+	va_end( arguments );
+}
+
+template <typename Int>
+void AssertUnlocked( Int N, const AutoMatrix<Int>* A, ... )
+{
+	va_list arguments;
+	va_start( arguments, A );
+	AssertUnlocked( *A );
+	for ( Int k = 1 ; k < N ; ++k )
+		AssertUnlocked( *va_arg( arguments, const AutoMatrix<Int>* ) );
+	va_end( arguments );
 }
 
 template <typename Int>
@@ -188,107 +275,11 @@ void AssertContiguous3x3(
         throw std::logic_error("3x3 must have contiguous memory");
 }
 
-static const ScalarTypes RealTypes[] = {
-	INTEGRAL,
-#ifndef DISABLE_FLOAT
-	SINGLE,
-#endif
-	DOUBLE,
-#ifndef DISABLE_COMPLEX
-#ifndef DISABLE_FLOAT
-	SINGLE,
-#endif
-	DOUBLE,
-#endif
-	UNKNOWN
-};
-
-static bool ComplexFlag[] = {
-	false,
-#ifndef DISABLE_FLOAT
-	false,
-#endif
-	false,
-#ifndef DISABLE_COMPLEX
-#ifndef DISABLE_FLOAT
-	true,
-#endif
-	true,
-#endif
-	false
-};
-
 template <typename Int>
 bool
 AutoMatrix<Int>::IsComplex() const
 {
 	return ComplexFlag[DataType()];
-}
-
-static const char *TypeNames[] = {
-	"Integral",
-#ifndef DISABLE_FLOAT
-	"Single",
-#endif
-	"Double",
-#ifndef DISABLE_COMPLEX
-#ifndef DISABLE_FLOAT
-	"SComplex",
-#endif
-	"DComplex",
-#endif
-	"UNKNOWN"
-};
-
-template <typename Int>
-void AutoMatrix<Int>::AssertCastingType( ScalarTypes B ) const
-{
-	ScalarTypes A = DataType();
-	if ( A != B ) {
-		std::ostringstream msg;
-		msg << "Casting error: cannot cast from " << TypeNames[A] << " to " << TypeNames[B];
-		throw std::logic_error( msg.str() );
-	}
-}
-
-template <typename Int>
-void AutoMatrix<Int>::AssertDataTypes( ScalarTypes B, bool unknown_ok ) const
-{ 
-	ScalarTypes A = DataType();
-	if ( A != B ) {
-		std::ostringstream msg;
-		msg << "Data type mismatch: " << TypeNames[A] << " != " << TypeNames[B];
-		throw std::logic_error( msg.str() );
-	}
-	if ( A == UNKNOWN || B == UNKNOWN )
-		throw std::logic_error( "Cannot use this method with UNKNOWN data types" );
-}
-
-template <typename Int>
-void AutoMatrix<Int>::AssertCRDataTypes( ScalarTypes B, bool imag_bad ) const
-{
-	ScalarTypes A = DataType();
-	if ( RealTypes[A] != B ) {
-		std::ostringstream msg;
-		msg << "Data type mismatch: Real(" << TypeNames[A] << ") != " << TypeNames[B];
-		throw std::logic_error( msg.str() );
-	}
-	if ( imag_bad && !ComplexFlag[A] )
-		throw std::logic_error( "Cannot use this method with real data" );
-}
-
-template <typename Int>
-void AutoMatrix<Int>::AssertUnlocked( LockTypes ltype ) const
-{
-	if ( locked_ )
-		switch ( ltype ) {
-		case ViewLock:
-			throw std::logic_error( "Cannot take an unlocked view of a locked matrix" );
-		case PartitionLock:
-			throw std::logic_error( "Cannot create an unlocked partition of a locked matrix" );
-		default:
-			throw std::logic_error( "Cannot perform this operation on a locked matrix" );
-		}
 }
 
 template <class T>
@@ -518,7 +509,7 @@ template <typename Int>
 template <typename T>
 Matrix<T,Int>& AutoMatrix<Int>::Cast()
 {
-	AssertCastingType( ScalarType<T>::Enum );
+	AssertDataTypes( DataType(), ScalarType<T>::Enum );
 	return reinterpret_cast<elem::Matrix<T,Int>&>(*this);
 }
 
@@ -526,7 +517,7 @@ template <typename Int>
 template <typename T>
 const Matrix<T,Int>& AutoMatrix<Int>::Cast() const
 {
-	AssertCastingType( ScalarType<T>::Enum );
+	AssertDataTypes( DataType(), ScalarType<T>::Enum );
 	return reinterpret_cast<const elem::Matrix<T,Int>&>(*this);
 }
 
@@ -550,7 +541,7 @@ void*
 AutoMatrix<Int>::Buffer()
 {
     PushCallStack("AutoMatrix::Buffer");
-    AssertUnlocked();
+    AssertUnlocked( *this ) ;
     PopCallStack();
     return Buffer_();
 }
@@ -560,8 +551,8 @@ void*
 AutoMatrix<Int>::Buffer( Int i, Int j )
 { 
     PushCallStack("AutoMatrix::Buffer");
-    AssertBounds( i, j );
-    AssertUnlocked();
+    AssertValidEntry( i, j, height_, width_ );
+    AssertUnlocked( *this );
     PopCallStack();
     return Buffer_( i, j );
 }
@@ -571,7 +562,7 @@ const void*
 AutoMatrix<Int>::LockedBuffer( Int i, Int j ) const
 {
     PushCallStack("AutoMatrix::LockedBuffer");
-    AssertBounds( i, j );
+    AssertValidEntry( i, j, height_, width_ );
     PopCallStack();
     return LockedBuffer_( i, j );
 }
@@ -580,6 +571,16 @@ AutoMatrix<Int>::LockedBuffer( Int i, Int j ) const
 // I/O
 //
 
+template<typename Int>
+void
+AutoMatrix<Int>::PrintShort( std::ostream& os ) const
+{
+	PushCallStack("AutoMatrix::PrintShort");
+	os << "Matrix<" << ScalarTypeToString( DataType() ) << ">("
+	   << height_ << "," << width_ << "," << ldim_ << ")";
+	PopCallStack();	
+}
+
 template <typename Int>
 void
 AutoMatrix<Int>::Print( std::ostream& os, const std::string msg ) const
@@ -587,10 +588,7 @@ AutoMatrix<Int>::Print( std::ostream& os, const std::string msg ) const
     PushCallStack("AutoMatrix::Print");
     if( msg != "" )
         os << msg << std::endl;
-    os << "Matrix: (h,w,l)=(" << height_ << "," << width_ << "," << ldim_ 
-       << "), dtype=" << TypeNames[DataType()];
-    if ( DataType() == UNKNOWN )
-    	os << ", dsize=" << DataSize();
+	PrintShort( os );        
     os << std::endl;
     PopCallStack();
 }
@@ -621,153 +619,140 @@ template <typename Int>
 Scalar<Int>
 AutoMatrix<Int>::Get( Int i, Int j ) const
 {
-	Scalar v;
-	AssertBounds( i, j );
-	Get_( i, j, v );
-	return v;
+	AssertValidEntry( i, j, height_, width_ );
+	return Get_S( i, j );
 }
 
 template<typename T,typename Int>
-void
-Matrix<T,Int>::Get_( Int i, Int j, Scalar& v ) const
+Scalar<Int> Matrix<T,Int>::Get_S( Int i, Int j ) const
 { 
-	v = Get_( i, j ); 
+	return Get_( i, j ); 
 }
 
 template <typename Int>
 void
 AutoMatrix<Int>::Set( Int i, Int j, const Scalar& v )
 {
-	AssertBounds( i, j );
-	AssertUnlocked();
-	Set_( i, j, v );
+	AssertValidEntry( i, j, height_, width_ );
+	AssertUnlocked( *this )  ;
+	Set_S( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::Set_( Int i, Int j, const Scalar& v ) 
+Matrix<T,Int>::Set_S( Int i, Int j, const Scalar& v ) 
 { 
-	T vv = v.template Cast<T>();
-	Set_( i, j, vv ); 
+	Set_( i, j, v.template Cast<T>() ); 
 }
 
 template <typename Int>
 void
 AutoMatrix<Int>::Update( Int i, Int j, const Scalar& v )
 {
-	AssertBounds( i, j );
-	AssertUnlocked();
-	Update_( i, j, v );
+	AssertValidEntry( i, j, height_, width_ );
+	AssertUnlocked( *this )  ;
+	Update_S( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::Update_( Int i, Int j, const Scalar& v ) 
+Matrix<T,Int>::Update_S( Int i, Int j, const Scalar& v ) 
 { 
-	T vv = v.template Cast<T>();
-	Update_( i, j, vv ); 
+	Update_( i, j, v.template Cast<T>() ); 
 }
 
 template <typename Int>
 Scalar<Int>
 AutoMatrix<Int>::GetRealPart( Int i, Int j ) const
 {
-	Scalar v;
-	AssertBounds( i, j );
-	GetRealPart_( i, j, v );
-	return v;
+	AssertValidEntry( i, j, height_, width_ );
+	return GetRealPart_S( i, j );
 }
 
 template<typename T,typename Int>
-void
-Matrix<T,Int>::GetRealPart_( Int i, Int j, Scalar& v ) const
+Scalar<Int>
+Matrix<T,Int>::GetRealPart_S( Int i, Int j ) const
 { 
-	v = GetRealPart_( i, j ); 
+	return GetRealPart_( i, j ); 
 }
 
 template <typename Int>
 void
 AutoMatrix<Int>::SetRealPart( Int i, Int j, const Scalar& v )
 {
-	AssertBounds( i, j );
-	AssertUnlocked();
-	SetRealPart_( i, j, v );
+	AssertValidEntry( i, j, height_, width_ );
+	AssertUnlocked( *this )  ;
+	SetRealPart_S( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::SetRealPart_( Int i, Int j, const Scalar& v )
+Matrix<T,Int>::SetRealPart_S( Int i, Int j, const Scalar& v )
 { 
-	RT vv = v.template Cast<RT>();
-	SetRealPart_( i, j, vv ); 
+	SetRealPart_( i, j, v.template Cast<RT>() ); 
 }
 
 template <typename Int>
 void
 AutoMatrix<Int>::UpdateRealPart( Int i, Int j, const Scalar& v )
 {
-	AssertBounds( i, j );
-	AssertUnlocked();
-	UpdateRealPart_( i, j, v );
+	AssertValidEntry( i, j, height_, width_ );
+	AssertUnlocked( *this )  ;
+	UpdateRealPart_S( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::UpdateRealPart_( Int i, Int j, const Scalar& v )
+Matrix<T,Int>::UpdateRealPart_S( Int i, Int j, const Scalar& v )
 { 
-	RT vv = v.template Cast<RT>();
-	UpdateRealPart_( i, j, vv ); 
+	UpdateRealPart_( i, j, v.template Cast<RT>() ); 
 }
 
 template <typename Int>
 Scalar<Int>
 AutoMatrix<Int>::GetImagPart( Int i, Int j ) const
 {
-	Scalar v;
-	AssertBounds( i, j );
-	GetImagPart_( i, j, v );
-	return v;
+	AssertValidEntry( i, j, height_, width_ );
+	return GetImagPart_S( i, j );
 }
 
 template<typename T,typename Int>
-void
-Matrix<T,Int>::GetImagPart_( Int i, Int j, Scalar& v ) const
+Scalar<Int>
+Matrix<T,Int>::GetImagPart_S( Int i, Int j ) const
 { 
-	v = GetImagPart_( i, j ); 
+	return GetImagPart_( i, j ); 
 }
 
 template <typename Int>
 void
 AutoMatrix<Int>::SetImagPart( Int i, Int j, const Scalar& v )
 {
-	AssertBounds( i, j );
-	AssertUnlocked();
-	SetImagPart_( i, j, v );
+	AssertValidEntry( i, j, height_, width_ );
+	AssertUnlocked( *this )  ;
+	SetImagPart_S( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::SetImagPart_( Int i, Int j, const Scalar& v )
+Matrix<T,Int>::SetImagPart_S( Int i, Int j, const Scalar& v )
 { 
-	RT vv = v.template Cast<RT>();
-	SetImagPart_( i, j, vv ); 
+	SetImagPart_( i, j, v.template Cast<RT>() ); 
 }
 
 template <typename Int>
 void
 AutoMatrix<Int>::UpdateImagPart( Int i, Int j, const Scalar& v )
 {
-	AssertBounds( i, j );
-	AssertUnlocked();
-	UpdateImagPart_( i, j, v );
+	AssertValidEntry( i, j, height_, width_ );
+	AssertUnlocked( *this )  ;
+	UpdateImagPart_S( i, j, v );
 }
 
 template<typename T,typename Int>
 void
-Matrix<T,Int>::UpdateImagPart_( Int i, Int j, const Scalar& v )
+Matrix<T,Int>::UpdateImagPart_S( Int i, Int j, const Scalar& v )
 { 
-	RT vv = v.template Cast<RT>();
-	UpdateImagPart_( i, j, vv );
+	UpdateImagPart_( i, j, v.template Cast<RT>() );
 }
 
 //
@@ -779,7 +764,7 @@ void
 AutoMatrix<Int>::GetDiagonal( Self& d, Int offset ) const
 {
 	PushCallStack( "AutoMatrix::GetDiagonal" );
-	AssertDataTypes( d );
+	AssertDataTypes( *this, d );
 	if ( d.viewing_ && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
         throw std::logic_error("d is not a column-vector of the right length");
     GetDiagonal_( d, offset );
@@ -806,7 +791,7 @@ void
 AutoMatrix<Int>::SetDiagonal( const Self& d, Int offset )
 {
 	PushCallStack( "AutoMatrix::GetDiagonal" );
-	AssertDataTypes( d );
+	AssertDataTypes( *this, d );
 	if ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 )
         throw std::logic_error("d is not a column-vector of the right length");
 	SetDiagonal_( d, offset );        
@@ -831,7 +816,7 @@ void
 AutoMatrix<Int>::UpdateDiagonal( const AutoMatrix<Int>& d, Int offset )
 {
 	PushCallStack( "AutoMatrix::GetDiagonal" );
-	AssertDataTypes( d );
+	AssertDataTypes( *this, d );
 	if ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 )
         throw std::logic_error("d is not a column-vector of the right length");
     UpdateDiagonal_( d, offset );
@@ -857,7 +842,7 @@ AutoMatrix<Int>::GetRealPartOfDiagonal
 ( Self& d, Int offset ) const
 {
 	PushCallStack("AutoMatrix::GetRealPartOfDiagonal");
-	AssertCRDataTypes( d );
+	AssertCRDataTypes( *this, d );
 	if ( d.viewing_ && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
         throw std::logic_error("d is not a column-vector of the right length");
     GetRealPartOfDiagonal_( d, offset );
@@ -886,7 +871,7 @@ AutoMatrix<Int>::GetImagPartOfDiagonal
 ( Self& d, Int offset ) const
 {
 	PushCallStack("AutoMatrix::GetImagPartOfDiagonal");
-	AssertCRDataTypes( d );
+	AssertCRDataTypes( *this, d );
 	if ( d.viewing_ && ( d.height_ != DiagonalLength( offset ) || d.width_ != 1 ) )
         throw std::logic_error("d is not a column-vector of the right length");
     GetImagPartOfDiagonal_( d, offset );
@@ -915,7 +900,7 @@ AutoMatrix<Int>::SetRealPartOfDiagonal
 ( const AutoMatrix<Int>& d, Int offset )
 {
     PushCallStack("AutoMatrix::SetRealPartOfDiagonal");
-    AssertCRDataTypes( d );
+	AssertCRDataTypes( *this, d );
     if( d.Height() != Parent::DiagonalLength(offset) || d.Width() != 1 )
         throw std::logic_error("d is not a column-vector of the right length");
     SetRealPartOfDiagonal_( d, offset );
@@ -943,7 +928,7 @@ AutoMatrix<Int>::SetImagPartOfDiagonal
 ( const AutoMatrix<Int>& d, Int offset )
 {
     PushCallStack("AutoMatrix::SetImagPartOfDiagonal");
-    AssertCRDataTypes( d, true );
+	AssertCRDataTypes( DataType(), d.DataType(), true );
     if( d.Height() != Parent::DiagonalLength(offset) || d.Width() != 1 )
         throw std::logic_error("d is not a column-vector of the right length");
     SetImagPartOfDiagonal_( d, offset );
@@ -971,7 +956,7 @@ AutoMatrix<Int>::UpdateRealPartOfDiagonal
 ( const AutoMatrix<Int>& d, Int offset )
 {
     PushCallStack("AutoMatrix::UpdateRealPartOfDiagonal");
-    AssertCRDataTypes( d );
+	AssertCRDataTypes( *this, d );
     if( d.Height() != Parent::DiagonalLength(offset) || d.Width() != 1 )
         throw std::logic_error("d is not a column-vector of the right length");
     UpdateRealPartOfDiagonal_( d, offset );
@@ -999,7 +984,7 @@ AutoMatrix<Int>::UpdateImagPartOfDiagonal
 ( const AutoMatrix<Int>& d, Int offset )
 {
     PushCallStack("AutoMatrix::UpdateImagPartOfDiagonal");
-    AssertCRDataTypes( d, true );
+	AssertCRDataTypes( DataType(), d.DataType(), true );
     if( d.Height() != Parent::DiagonalLength(offset) || d.Width() != 1 )
         throw std::logic_error("d is not a column-vector of the right length");
     UpdateImagPartOfDiagonal_( d, offset );
@@ -1050,12 +1035,11 @@ void
 AutoMatrix<Int>::CopyFrom( const Self& A )
 {
     PushCallStack("AutoMatrix::CopyFrom");
-    AssertDataTypes( A );
-    AssertUnlocked();
-	if ( viewing_ && ( height_ != A.height_ || width_ != A.width_ ) )
-		throw std::logic_error
-			("Cannot assign to a view of different dimensions");
-	CopyFrom_( A );			
+    AssertDataTypes( *this, A );
+    AssertUnlocked( *this );
+    if ( Viewing() ) 
+    	AssertSameSize( *this, A );
+	CopyFrom_( A );
     PopCallStack();
 }
 
@@ -1163,7 +1147,7 @@ AutoMatrix<Int>::Attach
 ( ScalarTypes dtype, Int height, Int width, const void* buffer, Int ldim, bool lock )
 {
     PushCallStack("AutoMatrix::Attach");
-    AssertDataTypes( dtype );
+    AssertDataTypes( DataType(), dtype );
     AssertDimensions( height, width, ldim );
     AssertBuffer( buffer );
 	Attach_( height, width, buffer, ldim, lock );

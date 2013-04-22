@@ -39,9 +39,9 @@ template <typename T,enum ScalarTypes S,typename Int=int>
 struct ScalarTypeBase {
 	typedef T Type;
 	typedef T RealType;
+	typedef Int IntegralType;
 	static const size_t SizeOf = sizeof(T);
 	static const ScalarTypes Enum = S;
-	static const char* Name;
 	static const bool isValid = false;
 	static const bool isComplex = false;
 	static const bool canBeComplex = false;
@@ -49,13 +49,13 @@ struct ScalarTypeBase {
 
 template <typename T,typename Int=int>
 struct ScalarType : public ScalarTypeBase<T,UNKNOWN,Int>
-{
-};
+{};
 
 template <enum ScalarTypes S,typename Int=int>
 struct ScalarEnum : public ScalarTypeBase<void*,S,Int>
-{
-};
+{};
+
+std::string ScalarTypeToString( ScalarTypes stype );
 
 }
 using namespace data_type_wrapper;
@@ -92,8 +92,37 @@ enum Distribution
     VR,  // Row-major vector distribution
     STAR // Do not distribute
 };
+enum Distribution2D 
+{
+	MC_MR,
+	MC_STAR,
+	MD_STAR,
+	MR_MC,
+	MR_STAR,
+	STAR_MC,
+	STAR_MD,
+	STAR_MR,
+	STAR_STAR,
+	STAR_VC,
+	STAR_VR,
+	VC_STAR,
+	VR_STAR
+};
+template <Distribution U,Distribution V,Distribution2D W>
+struct DistMapBase {
+	static const Distribution RowDist = STAR;
+	static const Distribution ColDist = STAR;
+	static const Distribution2D Dist2D = STAR_STAR;
+	static const bool isValid = false;
+};
+template <Distribution U,Distribution V>
+struct DistMap : public DistMapBase<U,V,STAR_STAR> {};
+template <Distribution2D U>
+struct Dist2DMap : public DistMapBase<STAR,STAR,U> {};
 std::string DistToString( Distribution distribution );
+std::string Dist2DToString( Distribution2D distribution );
 Distribution StringToDist( std::string s );
+Distribution2D StringToDist2D( std::string s );
 }
 using namespace distribution_wrapper;
 

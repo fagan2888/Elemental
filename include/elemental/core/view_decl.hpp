@@ -16,6 +16,7 @@ namespace elem {
 #define M Matrix<T,Int>
 #define AM AutoMatrix<Int>
 #define DM DistMatrix<T,U,V,Int>
+#define ADM AutoDistMatrix<Int>
 
 //
 // Viewing a full matrix
@@ -27,6 +28,9 @@ void View
 template<typename T,typename Int>
 void View
 ( M& A, M& B );
+template<typename Int>
+void View
+( ADM& A, ADM& B );
 template<typename T,Distribution U,Distribution V,typename Int>
 void View
 ( DM& A, DM& B );
@@ -37,6 +41,9 @@ void LockedView
 template<typename T,typename Int>
 void LockedView
 ( M& A, const M& B );
+template<typename Int>
+void LockedView
+( ADM& A, const ADM& B );
 template<typename T,Distribution U,Distribution V,typename Int>
 void LockedView
 ( DM& A, const DM& B );
@@ -53,6 +60,10 @@ template<typename T,typename Int>
 void View
 ( M& A, M& B,
   Int i, Int j, Int height, Int width );
+template<typename Int>
+void View
+( ADM& A, ADM& B,
+  Int i, Int j, Int height, Int width );
 template<typename T,Distribution U,Distribution V,typename Int>
 void View
 ( DM& A, DM& B,
@@ -65,6 +76,10 @@ void LockedView
 template<typename T,typename Int>
 void LockedView
 ( M& A, const M& B,
+  Int i, Int j, Int height, Int width );
+template<typename Int>
+void LockedView
+( ADM& A, const ADM& B,
   Int i, Int j, Int height, Int width );
 template<typename T,Distribution U,Distribution V,typename Int>
 void LockedView
@@ -83,6 +98,10 @@ template<typename T,typename Int>
 void View1x2
 ( M& A,
   M& BL, M& BR );
+template<typename Int>
+void View1x2
+( ADM& A,
+  ADM& BL, ADM& BR );
 template<typename T,Distribution U,Distribution V,typename Int>
 void View1x2
 ( DM& A,
@@ -98,6 +117,11 @@ void LockedView1x2
 (       M& A,
   const M& BL,
   const M& BR );
+template<typename Int>
+void LockedView1x2
+( ADM& A,
+  const ADM& BL, 
+  const ADM& BR );
 template<typename T,Distribution U,Distribution V,typename Int>
 void LockedView1x2
 (       DM& A,
@@ -118,6 +142,11 @@ void View2x1
 ( M& A,
   M& BT,
   M& BB );
+template<typename Int>
+void View2x1
+( ADM& A,
+  ADM& BT, 
+  ADM& BB );
 template<typename T,Distribution U,Distribution V,typename Int>
 void View2x1
 ( DM& A,
@@ -134,6 +163,11 @@ void LockedView2x1
 (       M& A,
   const M& BT,
   const M& BB );
+template<typename Int>
+void LockedView2x1
+( ADM& A,
+  const ADM& BT, 
+  const ADM& BB );
 template<typename T,Distribution U,Distribution V,typename Int>
 void LockedView2x1
 (       DM& A,
@@ -154,6 +188,11 @@ void View2x2
 ( M& A,
   M& BTL, M& BTR,
   M& BBL, M& BBR );
+template<typename Int>
+void View2x2
+( ADM& A,
+  ADM& BTL, ADM& BTR,
+  ADM& BBL, ADM& BBR );
 template<typename T,Distribution U,Distribution V,typename Int>
 void View2x2
 ( DM& A,
@@ -168,10 +207,13 @@ void LockedView2x2
 template<typename T,typename Int>
 void LockedView2x2
 (       M& A,
-  const M& BTL,
-  const M& BTR,
-  const M& BBL,
-  const M& BBR );
+  const M& BTL, const M& BTR,
+  const M& BBL, const M& BBR );
+template<typename Int>
+void LockedView2x2
+( ADM& A,
+  const ADM& BTL, const ADM& BTR,
+  const ADM& BBL, const ADM& BBR );
 template<typename T,Distribution U,Distribution V,typename Int>
 void LockedView2x2
 (       DM& A,
@@ -181,6 +223,9 @@ void LockedView2x2
   const DM& BBR );
 
 // Utilities for handling the extra information needed for [MD,* ] and [* ,MD]
+template<typename T,Distribution U,Distribution V,typename Int>
+void HandleDiagPath
+( ADM& A, const ADM& B );
 template<typename T,Distribution U,Distribution V,typename Int>
 void HandleDiagPath
 ( DM& A, const DM& B );
@@ -194,6 +239,7 @@ void HandleDiagPath
 #undef M
 #undef AM
 #undef DM
+#undef ADM
 
 } // namespace elem
 

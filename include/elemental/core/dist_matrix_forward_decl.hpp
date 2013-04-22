@@ -12,6 +12,9 @@
 
 namespace elem {
 
+template <typename Int=int>
+class AutoDistMatrix;
+
 template<typename T,typename Int=int>
 class AbstractDistMatrix;
 

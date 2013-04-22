@@ -20,8 +20,9 @@ template<typename R>
 R Abs( const R& alpha );
 
 // TODO: Think about extending to rings instead of just fields.
+
 template<typename R>
-struct Complex 
+struct Complex
 {
     typedef R BaseType;
     R real, imag;
@@ -29,20 +30,21 @@ struct Complex
     Complex();
     Complex( R a );
     Complex( R a, R b );
-    Complex( const std::complex<R>& alpha );
-    
-    template <class S>
-    Complex( const Complex<S>& alpha );
-	template <class S>
-    Complex<R>& operator=( const Complex<S>& alpha );
-    
+
+	Complex( const Complex<R>& alpha );
+    template <class S> Complex( const Complex<S>& alpha );
+	template <class S> Complex( const std::complex<S>& alpha );
+
     Complex<R>& operator=( const R& alpha );
+	Complex<R>& operator=( const Complex<R>& alpha );
+	template <class S> Complex<R>& operator=( const Complex<S>& alpha );
+	template <class S> Complex<R>& operator=( const std::complex<S>& alpha );
+    
     Complex<R>& operator+=( const R& alpha );
     Complex<R>& operator-=( const R& alpha );
     Complex<R>& operator*=( const R& alpha );
     Complex<R>& operator/=( const R& alpha );
     
-    Complex<R>& operator=( const Complex<R>& alpha );
     Complex<R>& operator+=( const Complex<R>& alpha );
     Complex<R>& operator-=( const Complex<R>& alpha );
     Complex<R>& operator*=( const Complex<R>& alpha );

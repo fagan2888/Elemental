@@ -23,6 +23,16 @@ template<typename T,typename Int>
 class DistMatrix<T,MD,STAR,Int> : public AbstractDistMatrix<T,Int>
 {
 public:
+	typedef DistMatrix<T,MD,STAR,Int> Self;
+	typedef DistMatrix<typename Base<T>::type,MD,STAR,Int> RSelf;
+	typedef AbstractDistMatrix<T,Int> Parent;
+	typedef AutoDistMatrix<Int> Auto;
+	
+	ScalarTypes DataType() const { return ScalarType<T>::Enum; }
+	Distribution RowDist() const { return MD; }
+	Distribution ColDist() const { return STAR; }
+	Distribution2D Dist2D() const { return MD_STAR; }
+	
     // Create a 0 x 0 distributed matrix
     DistMatrix( const elem::Grid& g=DefaultGrid() );
 
@@ -121,9 +131,9 @@ public:
 
     // Distribution alignment
     virtual void AlignWith( const elem::DistData<Int>& data );
-    virtual void AlignWith( const AbstractDistMatrix<T,Int>& A );
+    virtual void AlignWith( const AutoDistMatrix<Int>& A );
     virtual void AlignColsWith( const elem::DistData<Int>& data );
-    virtual void AlignColsWith( const AbstractDistMatrix<T,Int>& A );
+    virtual void AlignColsWith( const AutoDistMatrix<Int>& A );
 
     //
     // Though the following routines are meant for complex data, all but two
@@ -148,11 +158,11 @@ public:
     //
 
     void AlignWithDiagonal( const elem::DistData<Int>& data, Int offset=0 );
-    void AlignWithDiagonal( const AbstractDistMatrix<T,Int>& A, Int offset=0 );
+    void AlignWithDiagonal( const AutoDistMatrix<Int>& A, Int offset=0 );
     bool AlignedWithDiagonal
     ( const elem::DistData<Int>& data, Int offset=0 ) const;
     bool AlignedWithDiagonal 
-    ( const AbstractDistMatrix<T,Int>& A, Int offset=0 ) const;
+    ( const AutoDistMatrix<Int>& A, Int offset=0 ) const;
 
     // (Immutable) view of a distributed matrix's buffer
     void Attach
@@ -163,15 +173,11 @@ public:
       const T* buffer, Int ldim, const elem::Grid& grid );
 
     Int DiagPath() const;
+    void HandleDiagPath( const Auto& A );
 
 private:
     Int diagPath_;
     virtual void PrintBase( std::ostream& os, const std::string msg="" ) const;
-
-    friend void HandleDiagPath<>
-    ( DistMatrix<T,MD,STAR,Int>& A, const DistMatrix<T,MD,STAR,Int>& B );
-    friend void HandleDiagPath<>
-    ( DistMatrix<T,MD,STAR,Int>& A, const DistMatrix<T,MD,STAR,Int>& B );
 
     template<typename S,Distribution U,Distribution V,typename N>
     friend class DistMatrix;

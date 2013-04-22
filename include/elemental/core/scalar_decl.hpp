@@ -16,19 +16,25 @@ void AssertTypeKnown( ScalarTypes ntype );
 void AssertTypeMatch( ScalarTypes A, ScalarTypes B );
 void TypeCastError( ScalarTypes A, ScalarTypes B );
 
+template <typename Int> class Scalar;
+template <typename T,typename Int> const T& Get_( const Scalar<Int>& );
+template <typename T,typename Int> T& Set_( const Scalar<Int>& );
+template <typename T,typename Int> T Cast_( const Scalar<Int>& );
+
 template <typename Int>
 class Scalar
 {
 	public:
-		// Note: assumes a POD object. In C++11 we can test for this.
-		
 		Scalar();
-		Scalar( const Scalar& v );
-		template <class T> Scalar( const T& v );
-		Scalar& operator=( const Scalar& v );
-		template <class T> Scalar& operator=( const T& val );
-		
+		template <class T> 
+		Scalar( const T& );
+		Scalar( const Scalar<Int>& v );
+		template <class T>
+		Scalar<Int>& operator=( const T& v );
+		Scalar<Int>& operator=( const Scalar<Int>& v );
+			
 		ScalarTypes Type() const;
+	    void Print( std::ostream& os ) const;
 		
 		//
 		// The difference between Get() and Cast() is that Get() requires the internal
@@ -36,10 +42,16 @@ class Scalar
 		// casting to the target type if no precision is lost.
 		//
 		
-		template <class T> T& Set();
-		template <class T> const T& Get() const;
-		template <class T> T Cast() const;
+		template <typename T> T& Set();
+		template <typename T> const T& Get() const;
+		template <typename T> T Cast() const;
 		
+		//
+		// No type checking. Dangerous. But template friends are such a pain that this
+		// is how I'm implementing it. Don't use this.
+		//
+		
+		template <typename T> const T& Get_() const;
 	private:
 		ScalarTypes type_;
 		byte data_[sizeof(dcomplex)];
@@ -52,8 +64,6 @@ template <typename Int>
 class ConstBuffer
 {
 	public:
-		// Note: assumes a POD object. In C++11 we can test for this.
-		
 		ConstBuffer();
 		ConstBuffer( const ConstBuffer<Int>& v );
 		ConstBuffer( const Buffer<Int>& v );
@@ -76,8 +86,6 @@ template <typename Int>
 class Buffer
 {
 	public:
-		// Note: assumes a POD object. In C++11 we can test for this.
-		
 		Buffer();
 		Buffer( const Buffer<Int>& v );
 		template <class T> Buffer( T* v );

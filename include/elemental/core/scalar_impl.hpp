@@ -18,135 +18,243 @@ namespace elem {
 // duplicated the key aspect of its approach...)
 //
 
-inline void AssertTypeKnown( ScalarTypes type )
-{
-	if ( type == UNKNOWN )
-		throw std::logic_error( "enum::Scalar: attempted to assign an supported type" );
-}
-
-template <typename Int> inline
-Scalar<Int>::Scalar() :
-type_(UNKNOWN) {}
+#if __cplusplus < 201103L 
+inline void static_assert( bool test, const char* str )
+{ if ( !test ) throw std::logic_error( str ); }
+#endif
 
 template <typename Int>
-template <typename T> inline
-Scalar<Int>&
-Scalar<Int>::operator=( const T& v )
-{
-	AssertTypeKnown( ScalarType<T,Int>::Enum );
-	type_ = ScalarType<T,Int>::Enum;
-	*reinterpret_cast<T*>(&data_) = v;
-	return *this;
-}
+Scalar<Int>::Scalar()
+{}
 
-template <typename Int> inline
-Scalar<Int>& 
-Scalar<Int>::operator=( const Scalar<Int>& v )
-{
-	type_ = v.type_;
-	*reinterpret_cast<dcomplex*>(&data_) = *reinterpret_cast<const dcomplex*>(&v.data_);
-	return *this;
-}
-
-template <typename Int>
-template <typename T> inline
+template <typename Int> 
+template <class T> inline
 Scalar<Int>::Scalar( const T& v )
-{ operator=( v ); }
+{ 
+	Set<T>() = v; 
+}
 
-template <typename Int> inline
-Scalar<Int>::Scalar( const Scalar& v )
-{ operator=( v ); }
+template <typename Int> 
+template <class T> inline
+Scalar<Int>& Scalar<Int>::operator=( const T& v )
+{ 
+	Set<T>() = v; 
+	return *this; 
+}
 
 template <typename Int> inline
 ScalarTypes 
 Scalar<Int>::Type() const
+{ 
+	return type_; 
+}
+
+template <typename Int>
+template <typename T>
+const T& Scalar<Int>::Get() const
+{ 
+	static_assert( ScalarType<T,Int>::Enum != UNKNOWN, 
+		"Scalar value retrieval not supported for this type" );
+	AssertTypeMatch( type_, ScalarType<T,Int>::Enum );
+	return *reinterpret_cast<const T*>(reinterpret_cast<const void*>(&data_[0]));
+}
+
+template <typename Int>
+template <typename T>
+const T& Scalar<Int>::Get_() const
+{ 
+	return *reinterpret_cast<const T*>(reinterpret_cast<const void*>(&data_[0]));
+}
+
+template <typename Int> inline
+Scalar<Int>& Scalar<Int>::operator=( const Scalar<Int>& v )
+{ 
+	type_ = v.type_;
+	*reinterpret_cast<dcomplex*>(reinterpret_cast<void*>(&data_[0])) = v.Get_<dcomplex>();
+	return *this; 
+}
+
+template <typename Int>
+template <typename T>
+T& Scalar<Int>::Set()
+{ 
+	static_assert( ScalarType<T,Int>::Enum != UNKNOWN, 
+		"Scalar value setting not supported for this type" );
+	type_ = ScalarType<T,Int>::Enum;
+	return *reinterpret_cast<T*>(reinterpret_cast<void*>(&data_[0]));
+}
+
+template <typename Int> inline
+Int Cast_( const Scalar<Int>& s, ScalarType<Int,Int> )
+{
+	switch ( s.Type() ) {
+	default: TypeCastError( s.Type(), INTEGRAL );
+	case INTEGRAL:   return s.template Get_<Int>();
+	}
+}
+
+#ifndef DISABLE_FLOAT
+template <typename Int> inline
+float Cast_( const Scalar<Int>& s, ScalarType<float,Int> )
+{
+	switch ( s.Type() ) {
+	default: TypeCastError( s.Type(), SINGLE );
+	case SINGLE:     return s.template Get_<float>();
+	}
+}
+#endif
+
+template <typename Int> inline
+double Cast_( const Scalar<Int>& s, ScalarType<double,Int> )
+{
+	switch ( s.Type() ) {
+	default: TypeCastError( s.Type(), DOUBLE );
+	case INTEGRAL:   return s.template Get_<Int>();
+	case SINGLE:     return s.template Get_<float>();
+	case DOUBLE:     return s.template Get_<double>();
+	}
+}
+
+#ifndef DISABLE_COMPLEX
+#ifndef DISABLE_FLOAT
+
+template <typename Int> inline
+scomplex Cast_( const Scalar<Int>& s, ScalarType<scomplex,Int> q )
+{
+	switch ( s.Type() ) {
+	default: TypeCastError( s.Type(), SCOMPLEX );
+	case SINGLE:     return s.template Get_<float>();
+	case SCOMPLEX:   return s.template Get_<scomplex>();
+	}
+}
+
+template <typename Int> inline
+std::complex<float> Cast_( const Scalar<Int>& s, ScalarType<std::complex<float>,Int> )
+{
+	scomplex ans = Cast_( s, ScalarType<scomplex,Int>() );
+	return std::complex<float>( ans.real, ans.imag );
+}
+
+#endif
+
+template <typename Int> inline
+dcomplex Cast_( const Scalar<Int>& s, ScalarType<dcomplex,Int> q )
+{
+	switch ( s.Type() ) {
+	default: TypeCastError( s.Type(), DCOMPLEX );
+	case INTEGRAL:   return s.template Get_<Int>();
+	case SINGLE:     return s.template Get_<float>();
+	case DOUBLE:     return s.template Get_<double>();
+	case SCOMPLEX:   return s.template Get_<scomplex>();
+	case DCOMPLEX:   return s.template Get_<dcomplex>();
+	}
+}
+
+template <typename Int> inline
+std::complex<double> Cast_( const Scalar<Int>& s, ScalarType<std::complex<double>,Int> )
+{
+	dcomplex ans = Cast_( s, ScalarType<dcomplex,Int>() );
+	return std::complex<double>( ans.real, ans.imag );
+}
+
+#endif
+
+template <typename Int>
+template <typename T> inline
+T Scalar<Int>::Cast() const
+{ return elem::Cast_( *this, ScalarType<T,Int>() ); }
+
+template <typename Int> inline
+ConstBuffer<Int>::ConstBuffer() {}
+
+template <typename Int> inline
+Buffer<Int>::Buffer() {}
+
+template <typename Int>
+ConstBuffer<Int>& ConstBuffer<Int>::operator=( const ConstBuffer<Int>& v )
+{ type_ = v.type_; data_ = v.data_; return *this; }
+
+template <typename Int>
+ConstBuffer<Int>& ConstBuffer<Int>::operator=( const Buffer<Int>& v )
+{ type_ = v.type_; data_ = v.data_; return *this; }
+
+template <typename Int>
+Buffer<Int>& Buffer<Int>::operator=( const Buffer<Int>& v )
+{ type_ = v.type_; data_ = v.data_; return *this; }
+
+template <typename Int>
+template <typename T>
+ConstBuffer<Int>& ConstBuffer<Int>::operator=( const T* v )
+{ 
+	static_assert( type_ != UNKNOWN, "Typed buffers not supported for this type" );
+	type_ = ScalarType<T>::Enum; 
+	data_ = v; 
+	return *this; 
+}
+
+template <typename Int>
+template <typename T>
+Buffer<Int>& Buffer<Int>::operator=( T* v )
+{ 
+	static_assert( type_ != UNKNOWN, "Typed buffers not supported for this type" );
+	type_ = ScalarType<T>::Enum; 
+	data_ = v; 
+	return *this; 
+}
+
+template <typename Int> inline
+ConstBuffer<Int>::ConstBuffer( const ConstBuffer<Int>& v )
+{ operator=( v ); }
+
+template <typename Int> inline
+ConstBuffer<Int>::ConstBuffer( const Buffer<Int>& v )
+{ operator=( v ); }
+
+template <typename Int> inline
+Buffer<Int>::Buffer( const Buffer<Int>& v )
+{ operator=( v ); }
+
+template <typename Int>
+template <typename T>
+ConstBuffer<Int>::ConstBuffer( const T* v )
+{ operator=( v ); }
+
+template <typename Int>
+template <typename T>
+Buffer<Int>::Buffer( T* v )
+{ operator=( v ); }
+
+template <typename Int>
+ScalarTypes ConstBuffer<Int>::Type() const
 { return type_; }
 
 template <typename Int>
-template <typename T> inline
-T& 
-Scalar<Int>::Set()
-{
-	AssertTypeKnown( ScalarType<T,Int>::Enum );
-	type_ = ScalarType<T,Int>::Enum;
-	return *reinterpret_cast<T*>(&data_);
-}
+ScalarTypes Buffer<Int>::Type() const
+{ return type_; }
 
-template <typename Int>	
-template <typename T> inline
-const T& 
-Scalar<Int>::Get() const
+template <typename Int>
+template <typename T>
+const T* ConstBuffer<Int>::Get() const
 {
 	AssertTypeMatch( type_, ScalarType<T,Int>::Enum );
-	return *reinterpret_cast<const T*>(&data_);
-}
-
-template <typename T,typename Int> inline
-T Cast_( const Scalar<Int>& s )
-{
-	return TypeCastError( s.type_, ScalarType<T,Int>::Enum );
-}
-
-template <>
-int Cast_<int,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:       TypeCastError( s.Type(), INTEGRAL );
-	case INTEGRAL: return s.Get<int>();
-	}
-}
-
-template <>
-float Cast_<float,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:        TypeCastError( s.Type(), SINGLE );
-	case SINGLE:    return s.Get<float>();
-	}
-}
-
-template <>
-double Cast_<double,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:        TypeCastError( s.Type(), DOUBLE );
-	case INTEGRAL:  return s.Get<int>();
-	case SINGLE:    return s.Get<float>();
-	case DOUBLE:    return s.Get<double>();
-	}
-} 
-
-template <>
-scomplex Cast_<scomplex,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:       TypeCastError( s.Type(), SCOMPLEX );
-	case SINGLE:   return s.Get<float>();
-	case SCOMPLEX: return s.Get<scomplex>();
-	}
-}
-
-template <>
-dcomplex Cast_<dcomplex,int>( const Scalar<int>& s )
-{
-	switch ( s.Type() ) {
-	default:        TypeCastError( s.Type(), DCOMPLEX );
-	case INTEGRAL:  return s.Get<int>();
-	case SINGLE:    return s.Get<float>();
-	case DOUBLE:    return s.Get<double>();
-	case SCOMPLEX:  return s.Get<scomplex>();
-	case DCOMPLEX:  return s.Get<dcomplex>();
-	}
+	return reinterpret_cast<const T*>(data_);
 }
 
 template <typename Int>
-template <typename T> inline
-T 
-Scalar<Int>::Cast() const
+template <typename T>
+T* Buffer<Int>::Get() const
 {
-	AssertTypeKnown( ScalarType<T,Int>::Enum );
-	return Cast_<T,Int>( *this );
+	AssertTypeMatch( type_, ScalarType<T,Int>::Enum );
+	return reinterpret_cast<T*>(data_);
 }
+
+template <typename Int>
+ConstBuffer<Int>::operator bool() const
+{ return data_ != 0; }
+
+template <typename Int>
+Buffer<Int>::operator bool() const
+{ return data_ != 0; }
 
 } // namespace elem
 

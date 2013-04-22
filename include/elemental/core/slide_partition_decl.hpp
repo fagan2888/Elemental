@@ -16,6 +16,7 @@ namespace elem {
 #define AM AutoMatrix<Int>
 #define M  Matrix<T,Int>
 #define DM DistMatrix<T,U,V,Int>
+#define ADM AutoDistMatrix<Int>
 
 //
 // SlidePartitionUp
@@ -32,6 +33,12 @@ void SlidePartitionUp
 ( M& AT, M& A0,
          M& A1,
   M& AB, M& A2 );
+
+template<typename Int>
+void SlidePartitionUp
+( ADM& AT, ADM& A0,
+           ADM& A1,
+  ADM& AB, ADM& A2 );
 
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlidePartitionUp
@@ -50,6 +57,12 @@ void SlideLockedPartitionUp
 ( M& AT, const M& A0,
          const M& A1,
   M& AB, const M& A2 );
+
+template<typename Int>
+void SlideLockedPartitionUp
+( ADM& AT, const ADM& A0,
+           const ADM& A1,
+  ADM& AB, const ADM& A2 );
 
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlideLockedPartitionUp
@@ -73,6 +86,12 @@ void SlidePartitionDown
          M& A1,
   M& AB, M& A2 );
 
+template<typename Int>
+void SlidePartitionDown
+( ADM& AT, ADM& A0,
+           ADM& A1,
+  ADM& AB, ADM& A2 );
+
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlidePartitionDown
 ( DM& AT, DM& A0,
@@ -90,6 +109,12 @@ void SlideLockedPartitionDown
 ( M& AT, const M& A0,
          const M& A1,
   M& AB, const M& A2 );
+
+template<typename Int>
+void SlideLockedPartitionDown
+( ADM& AT, const ADM& A0,
+           const ADM& A1,
+  ADM& AB, const ADM& A2 );
 
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlideLockedPartitionDown
@@ -111,6 +136,11 @@ void SlidePartitionLeft
 ( M& AL, M& AR,
   M& A0, M& A1, M& A2 );
 
+template<typename Int>
+void SlidePartitionLeft
+( ADM& AL, ADM& AR,
+  ADM& A0, ADM& A1, ADM& A2 );
+
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlidePartitionLeft
 ( DM& AL, DM& AR,
@@ -125,6 +155,11 @@ template<typename T,typename Int>
 void SlideLockedPartitionLeft
 ( M& AL, M& AR,
   const M& A0, const M& A1, const M& A2 ); 
+
+template<typename Int>
+void SlideLockedPartitionLeft
+( ADM& AL, ADM& AR,
+  const ADM& A0, const ADM& A1, const ADM& A2 ); 
 
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlideLockedPartitionLeft
@@ -145,6 +180,11 @@ void SlidePartitionRight
 ( M& AL, M& AR,
   M& A0, M& A1, M& A2 );
 
+template<typename Int>
+void SlidePartitionRight
+( ADM& AL, ADM& AR,
+  ADM& A0, ADM& A1, ADM& A2 );
+
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlidePartitionRight
 ( DM& AL, DM& AR,
@@ -159,6 +199,11 @@ template<typename T,typename Int>
 void SlideLockedPartitionRight
 ( M& AL, M& AR,
   const M& A0, const M& A1, const M& A2 );
+
+template<typename Int>
+void SlideLockedPartitionRight
+( ADM& AL, ADM& AR,
+  const ADM& A0, const ADM& A1, const ADM& A2 );
 
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlideLockedPartitionRight
@@ -181,6 +226,12 @@ void SlidePartitionUpDiagonal
                   M& A10, M& A11, M& A12,
   M& ABL, M& ABR, M& A20, M& A21, M& A22 );
 
+template<typename Int>
+void SlidePartitionUpDiagonal
+( ADM& ATL, ADM& ATR, ADM& A00, ADM& A01, ADM& A02,
+                      ADM& A10, ADM& A11, ADM& A12,
+  ADM& ABL, ADM& ABR, ADM& A20, ADM& A21, ADM& A22 );
+
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlidePartitionUpDiagonal
 ( DM& ATL, DM& ATR, DM& A00, DM& A01, DM& A02,
@@ -198,6 +249,12 @@ void SlideLockedPartitionUpDiagonal
 ( M& ATL, M& ATR, const M& A00, const M& A01, const M& A02,
                   const M& A10, const M& A11, const M& A12,
   M& ABL, M& ABR, const M& A20, const M& A21, const M& A22 );
+
+template<typename Int>
+void SlideLockedPartitionUpDiagonal
+( ADM& ATL, ADM& ATR, const ADM& A00, const ADM& A01, const ADM& A02,
+                      const ADM& A10, const ADM& A11, const ADM& A12,
+  ADM& ABL, ADM& ABR, const ADM& A20, const ADM& A21, const ADM& A22 );
 
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlideLockedPartitionUpDiagonal
@@ -221,6 +278,12 @@ void SlidePartitionDownDiagonal
                   M& A10, M& A11, M& A12,
   M& ABL, M& ABR, M& A20, M& A21, M& A22 );
 
+template<typename Int>
+void SlidePartitionDownDiagonal
+( ADM& ATL, ADM& ATR, ADM& A00, ADM& A01, ADM& A02,
+                      ADM& A10, ADM& A11, ADM& A12,
+  ADM& ABL, ADM& ABR, ADM& A20, ADM& A21, ADM& A22 );
+
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlidePartitionDownDiagonal
 ( DM& ATL, DM& ATR, DM& A00, DM& A01, DM& A02,
@@ -239,6 +302,12 @@ void SlideLockedPartitionDownDiagonal
                   const M& A10, const M& A11, const M& A12,
   M& ABL, M& ABR, const M& A20, const M& A21, const M& A22 );
 
+template<typename T,typename Int>
+void SlideLockedPartitionDownDiagonal
+( ADM& ATL, ADM& ATR, const ADM& A00, const ADM& A01, const ADM& A02,
+                      const ADM& A10, const ADM& A11, const ADM& A12,
+  ADM& ABL, ADM& ABR, const ADM& A20, const ADM& A21, const ADM& A22 );
+
 template<typename T,Distribution U,Distribution V,typename Int>
 void SlideLockedPartitionDownDiagonal
 ( DM& ATL, DM& ATR, const DM& A00, const DM& A01, const DM& A02,
@@ -248,6 +317,7 @@ void SlideLockedPartitionDownDiagonal
 #undef AM
 #undef DM
 #undef M
+#undef ADM
 
 } // namespace elem
 

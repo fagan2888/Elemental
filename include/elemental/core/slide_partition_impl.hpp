@@ -16,60 +16,50 @@ namespace elem {
 #define AM AutoMatrix<Int>
 #define M  Matrix<T,Int>
 #define DM DistMatrix<T,U,V,Int>
+#define ADM AutoDistMatrix<Int>
 
 //
 // Legend:
 //      Function__: no consistency checks.
 //      Function_: full consistency checking.
 //      Function( AutoMatrix<Int>& ... )
+//      Function( AutoDistMatrix<Int>& ... )
 //			Inlined to Function_, so fully checked in both Release and Debug.
 //			This is for use with dynamically-typed languages.
 //      Function( Matrix<T,Int>& ... ):
+//      Function( DistMatrix<T,U,V,Int>& ... ):
 //			Inlined to Function__ in Release mode, for high performance.
 //			Inlined to Function_  in Debug mode, for full consistency checking.
 //
-
-#ifdef RELEASE
-#define RUNDERSCORE(x) x ## _
-#else
-#define RUNDERSCORE(x) x
-#endif
 
 //
 // SlidePartitionUp
 //
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionUp__
-( AM& AT, const AM& A0,
-          const AM& A1,
-  AM& AB, const AM& A2, bool lock )
+( Q& AT, const Q& A0,
+         const Q& A1,
+  Q& AB, const Q& A2, bool lock )
 {
     View__(    AT, A0, lock );
     View2x1__( AB, A1, 
                    A2, lock );
 }
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionUp_
-( AM& AT, const AM& A0,
-          const AM& A1,
-  AM& AB, const AM& A2, bool lock )
+( Q& AT, const Q& A0,
+         const Q& A1,
+  Q& AB, const Q& A2, bool lock )
 {
-    PushCallStack("SlidePartitionUp [Matrix]");
-    AT.AssertDataTypes( AB );
-    AB.AssertDataTypes( A0 );
-    AB.AssertDataTypes( A1 );
-    AB.AssertDataTypes( A2 );
-    if ( !lock ) {
-    	A0.AssertUnlocked( AM::PartitionLock );
-    	A1.AssertUnlocked( AM::PartitionLock );
-    	A2.AssertUnlocked( AM::PartitionLock );
-    }
-    AssertContiguous2x1( A0, A1 );
-    AssertContiguous2x1( A1, A2 );
+    PushCallStack("SlidePartitionUp");
+    AssertDataTypes( 5, &AT, &AB, &A0, &A1, &A2 );
+    if ( !lock )
+    	AssertUnlocked( 3, &A0, &A1, &A2 );
+    AssertContiguous3x1( A0, A1, A2 );
     SlidePartitionUp__( AT, A0, A1, AB, A2, lock );
     PopCallStack();
 }
@@ -90,23 +80,21 @@ SlidePartitionUp
   M& AB, M& A2 )
 { RUNDERSCORE(SlidePartitionUp_)( AT, A0, A1, AB, A2, false ); }
 
+template<typename Int>
+inline void
+SlidePartitionUp
+( ADM& AT, ADM& A0,
+          ADM& A1,
+  ADM& AB, ADM& A2 )
+{ SlidePartitionUp_( AT, A0, A1, AB, A2, false ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlidePartitionUp
 ( DM& AT, DM& A0,
-          DM& A1,
+         DM& A1,
   DM& AB, DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlidePartitionUp [DistMatrix]");
-#endif
-    View( AT, A0 );
-    View2x1( AB, A1,
-                 A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionUp_)( AT, A0, A1, AB, A2, false ); }
 
 template<typename Int>
 inline void
@@ -124,59 +112,50 @@ SlideLockedPartitionUp
   M& AB, const M& A2 )
 { RUNDERSCORE(SlidePartitionUp_)( AT, A0, A1, AB, A2, true ); }
 
+template<typename Int>
+inline void
+SlideLockedPartitionUp
+( ADM& AT, const ADM& A0,
+           const ADM& A1,
+  ADM& AB, const ADM& A2 )
+{ SlidePartitionUp_( AT, A0, A1, AB, A2, true ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlideLockedPartitionUp
 ( DM& AT, const DM& A0,
           const DM& A1,
   DM& AB, const DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlideLockedPartitionUp [DistMatrix]");
-#endif
-    LockedView( AT, A0 );
-    LockedView2x1( AB, A1,
-                       A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionUp_)( AT, A0, A1, AB, A2, true ); }
 
 //
 // SlidePartitionDown
 //
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionDown__
-( AM& AT, const AM& A0,
-          const AM& A1,
-  AM& AB, const AM& A2, bool lock )
+( Q& AT, const Q& A0,
+         const Q& A1,
+  Q& AB, const Q& A2, bool lock )
 {
     View2x1__( AT, A0, 
                    A1, lock );
     View__(    AB, A2, lock );
 }
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionDown_
-( AM& AT, const AM& A0,
-          const AM& A1,
-  AM& AB, const AM& A2, bool lock )
+( Q& AT, const Q& A0,
+         const Q& A1,
+  Q& AB, const Q& A2, bool lock )
 {
-    PushCallStack("SlidePartitionDown [Matrix]");
-    AT.AssertDataTypes( AB );
-    AB.AssertDataTypes( A0 );
-    AB.AssertDataTypes( A1 );
-    AB.AssertDataTypes( A2 );
-    if ( !lock ) {
-    	A0.AssertUnlocked( AM::PartitionLock );
-    	A1.AssertUnlocked( AM::PartitionLock );
-    	A2.AssertUnlocked( AM::PartitionLock );
-    }
-    AssertContiguous2x1( A0, A1 );
-    AssertContiguous2x1( A1, A2 );
+    PushCallStack("SlidePartitionDown");
+    AssertDataTypes( 5, &AT, &AB, &A0, &A1, &A2 );
+    if ( !lock )
+    	AssertUnlocked( 3, &A0, &A1, &A2 );
+    AssertContiguous3x1( A0, A1, A2 );
     SlidePartitionDown__( AT, A0, A1, AB, A2, lock );
     PopCallStack();
 }
@@ -197,23 +176,21 @@ SlidePartitionDown
   M& AB, M& A2 )
 { RUNDERSCORE(SlidePartitionDown_)( AT, A0, A1, AB, A2, false ); }
 
+template<typename Int>
+inline void
+SlidePartitionDown
+( ADM& AT, ADM& A0,
+          ADM& A1,
+  ADM& AB, ADM& A2 )
+{ SlidePartitionDown_( AT, A0, A1, AB, A2, false ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlidePartitionDown
 ( DM& AT, DM& A0,
-          DM& A1,
+         DM& A1,
   DM& AB, DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlidePartitionDown [DistMatrix]");
-#endif
-    View2x1( AT, A0,
-                 A1 );
-    View( AB, A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionDown_)( AT, A0, A1, AB, A2, false ); }
 
 template<typename Int>
 inline void
@@ -231,56 +208,47 @@ SlideLockedPartitionDown
   M& AB, const M& A2 )
 { RUNDERSCORE(SlidePartitionDown_)( AT, A0, A1, AB, A2, true ); }
 
+template<typename Int>
+inline void
+SlideLockedPartitionDown
+( ADM& AT, const ADM& A0,
+           const ADM& A1,
+  ADM& AB, const ADM& A2 )
+{ SlidePartitionDown_( AT, A0, A1, AB, A2, true ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlideLockedPartitionDown
 ( DM& AT, const DM& A0,
           const DM& A1,
   DM& AB, const DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlideLockedPartitionDown [DistMatrix]");
-#endif
-    LockedView2x1( AT, A0,
-                       A1 );
-    LockedView( AB, A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionDown_)( AT, A0, A1, AB, A2, true ); }
 
 //
 // SlidePartitionLeft
 //
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionLeft__
-( AM& AL, AM& AR,
-  const AM& A0, const AM& A1, const AM& A2, bool lock )
+( Q& AL, Q& AR,
+  const Q& A0, const Q& A1, const Q& A2, bool lock )
 {
     View__(    AL, A0,         lock );
     View1x2__( AR,     A1, A2, lock );
 }
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionLeft_
-( AM& AL, AM& AR,
-  const AM& A0, const AM& A1, const AM& A2, bool lock )
+( Q& AL, Q& AR,
+  const Q& A0, const Q& A1, const Q& A2, bool lock )
 {
-    PushCallStack("SlidePartitionLeft [Matrix]");
-    AL.AssertDataTypes( AR );
-    AL.AssertDataTypes( A0 );
-    AL.AssertDataTypes( A1 );
-    AL.AssertDataTypes( A2 );
-    if ( !lock ) {
-    	A0.AssertUnlocked( AM::PartitionLock );
-    	A1.AssertUnlocked( AM::PartitionLock );
-    	A2.AssertUnlocked( AM::PartitionLock );
-    }
-    AssertContiguous1x2( A0, A1 );
-    AssertContiguous1x2( A1, A2 );
+    PushCallStack("SlidePartitionLeft");
+    AssertDataTypes( 5, &AL, &AR, &A0, &A1, &A2 );
+    if ( !lock )
+    	AssertUnlocked( 3, &A0, &A1, &A2 );
+    AssertContiguous1x3( A0, A1, A2 );
     SlidePartitionLeft__( AL, AR, A0, A1, A2, lock );
     PopCallStack();
 }
@@ -299,21 +267,19 @@ SlidePartitionLeft
   M& A0, M& A1, M& A2 )
 { RUNDERSCORE(SlidePartitionLeft_)( AL, AR, A0, A1, A2, false ); }
 
+template <typename Int>
+inline void
+SlidePartitionLeft
+( ADM& AL, ADM& AR,
+  ADM& A0, ADM& A1, ADM& A2 )
+{ SlidePartitionLeft_( AL, AR, A0, A1, A2, false ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlidePartitionLeft
 ( DM& AL, DM& AR,
   DM& A0, DM& A1, DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlidePartitionLeft [DistMatrix]");
-#endif
-    View( AL, A0 );
-    View1x2( AR, A1, A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionLeft_)( AL, AR, A0, A1, A2, false ); }
 
 template <typename Int>
 inline void
@@ -329,54 +295,45 @@ SlideLockedPartitionLeft
   const M& A0, const M& A1, const M& A2 )
 { RUNDERSCORE(SlidePartitionLeft_)( AL, AR, A0, A1, A2, true ); }
 
+template <typename Int>
+inline void
+SlideLockedPartitionLeft
+( ADM& AL, ADM& AR,
+  const ADM& A0, const ADM& A1, const ADM& A2 )
+{ SlidePartitionLeft_( AL, AR, A0, A1, A2, true ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlideLockedPartitionLeft
 ( DM& AL, DM& AR,
   const DM& A0, const DM& A1, const DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlideLockedPartitionLeft [DistMatrix]");
-#endif
-    LockedView( AL, A0 );
-    LockedView1x2( AR, A1, A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionLeft_)( AL, AR, A0, A1, A2, true ); }
 
 //
 // SlidePartitionRight
 //
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionRight__
-( AM& AL, AM& AR,
-  const AM& A0, const AM& A1, const AM& A2, bool lock )
+( Q& AL, Q& AR,
+  const Q& A0, const Q& A1, const Q& A2, bool lock )
 {
     View1x2__( AL, A0, A1,     lock );
     View__(    AR,         A2, lock );
 }
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionRight_
-( AM& AL, AM& AR,
-  const AM& A0, const AM& A1, const AM& A2, bool lock )
+( Q& AL, Q& AR,
+  const Q& A0, const Q& A1, const Q& A2, bool lock )
 {
-    PushCallStack("SlidePartitionRight [Matrix]");
-    AL.AssertDataTypes( AR );
-    AL.AssertDataTypes( A0 );
-    AL.AssertDataTypes( A1 );
-    AL.AssertDataTypes( A2 );
-    if ( !lock ) {
-    	A0.AssertUnlocked( AM::PartitionLock );
-    	A1.AssertUnlocked( AM::PartitionLock );
-    	A2.AssertUnlocked( AM::PartitionLock );
-    }
-    AssertContiguous1x2( A0, A1 );
-    AssertContiguous1x2( A1, A2 );
+    PushCallStack("SlidePartitionRight");
+    AssertDataTypes( 5, &AL, &AR, &A0, &A1, &A2 );
+    if ( !lock )
+    	AssertUnlocked( 3, &A0, &A1, &A2 );
+    AssertContiguous1x3( A0, A1, A2 );
     SlidePartitionRight__( AL, AR, A0, A1, A2, lock );
     PopCallStack();
 }
@@ -395,21 +352,19 @@ SlidePartitionRight
   M& A0, M& A1, M& A2 )
 { RUNDERSCORE(SlidePartitionRight_)( AL, AR, A0, A1, A2, false ); }
 
+template <typename Int>
+inline void
+SlidePartitionRight
+( ADM& AL, ADM& AR,
+  ADM& A0, ADM& A1, ADM& A2 )
+{ SlidePartitionRight_( AL, AR, A0, A1, A2, false ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlidePartitionRight
 ( DM& AL, DM& AR,
   DM& A0, DM& A1, DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlidePartitionRight [DistMatrix]");
-#endif
-    View1x2( AL, A0, A1 );
-    View( AR, A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionRight_)( AL, AR, A0, A1, A2, false ); }
 
 template <typename Int>
 inline void
@@ -425,32 +380,30 @@ SlideLockedPartitionRight
   const M& A0, const M& A1, const M& A2 )
 { RUNDERSCORE(SlidePartitionRight_)( AL, AR, A0, A1, A2, true ); }
 
+template <typename Int>
+inline void
+SlideLockedPartitionRight
+( ADM& AL, ADM& AR,
+  const ADM& A0, const ADM& A1, const ADM& A2 )
+{ SlidePartitionRight_( AL, AR, A0, A1, A2, true ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlideLockedPartitionRight
 ( DM& AL, DM& AR,
   const DM& A0, const DM& A1, const DM& A2 )
-{
-#ifndef RELEASE
-    PushCallStack("SlideLockedPartitionRight [DistMatrix]");
-#endif
-    LockedView1x2( AL, A0, A1 );
-    LockedView( AR, A2 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionRight_)( AL, AR, A0, A1, A2, true ); }
 
 //
 // SlidePartitionUpDiagonal
 //
 
-template <typename Int>
+template <typename Q>
 inline void
 SlidePartitionUpDiagonal__
-( AM& ATL, AM& ATR, const AM& A00, const AM& A01, const AM& A02,
-                    const AM& A10, const AM& A11, const AM& A12,
-  AM& ABL, AM& ABR, const AM& A20, const AM& A21, const AM& A22, bool lock )
+( Q& ATL, Q& ATR, const Q& A00, const Q& A01, const Q& A02,
+                  const Q& A10, const Q& A11, const Q& A12,
+  Q& ABL, Q& ABR, const Q& A20, const Q& A21, const Q& A22, bool lock )
 {
     View__(    ATL, A00,           lock );
     View1x2__( ATR,      A01, A02, lock );
@@ -460,37 +413,17 @@ SlidePartitionUpDiagonal__
                          A21, A22, lock );
 }
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionUpDiagonal_
-( AM& ATL, AM& ATR, const AM& A00, const AM& A01, const AM& A02,
-                    const AM& A10, const AM& A11, const AM& A12,
-  AM& ABL, AM& ABR, const AM& A20, const AM& A21, const AM& A22, bool lock )
+( Q& ATL, Q& ATR, const Q& A00, const Q& A01, const Q& A02,
+                  const Q& A10, const Q& A11, const Q& A12,
+  Q& ABL, Q& ABR, const Q& A20, const Q& A21, const Q& A22, bool lock )
 {
-    PushCallStack("SlidePartitionUpDiagonal [Matrix]");
-    ATL.AssertDataTypes( ATR );
-    ATL.AssertDataTypes( A00 );
-    ATL.AssertDataTypes( A01 );
-    ATL.AssertDataTypes( A02 );
-    ATL.AssertDataTypes( A10 );
-    ATL.AssertDataTypes( A11 );
-    ATL.AssertDataTypes( A12 );
-    ATL.AssertDataTypes( ABL );
-    ATL.AssertDataTypes( ABR );
-    ATL.AssertDataTypes( A20 );
-    ATL.AssertDataTypes( A21 );
-    ATL.AssertDataTypes( A22 );
-    if ( !lock ) {
-    	A00.AssertUnlocked( AM::PartitionLock );
-    	A01.AssertUnlocked( AM::PartitionLock );
-    	A02.AssertUnlocked( AM::PartitionLock );
-    	A10.AssertUnlocked( AM::PartitionLock );
-    	A11.AssertUnlocked( AM::PartitionLock );
-    	A12.AssertUnlocked( AM::PartitionLock );
-    	A20.AssertUnlocked( AM::PartitionLock );
-    	A21.AssertUnlocked( AM::PartitionLock );
-    	A22.AssertUnlocked( AM::PartitionLock );
-    }
+    PushCallStack("SlidePartitionUpDiagonal");
+    AssertDataTypes( 13, &ATL, &ATR, &A00, &A01, &A02, &A10, &A11, &A12, &ABL, &ABR, &A20, &A21, &A22 );
+    if ( !lock )
+    	AssertUnlocked( 9, &A00, &A01, &A02, &A10, &A11, &A12, &A20, &A21, &A22 );
     AssertContiguous3x3( A00, A01, A02, A10, A11, A12, A20, A21, A22 );
 	SlidePartitionUpDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, lock );
     PopCallStack();
@@ -512,26 +445,21 @@ SlidePartitionUpDiagonal
   M& ABL, M& ABR, M& A20, M& A21, M& A22 )
 { RUNDERSCORE(SlidePartitionUpDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, false ); }
 
+template<typename Int>
+inline void
+SlidePartitionUpDiagonal
+( ADM& ATL, ADM& ATR, ADM& A00, ADM& A01, ADM& A02,
+                      ADM& A10, ADM& A11, ADM& A12,
+  ADM& ABL, ADM& ABR, ADM& A20, ADM& A21, ADM& A22 )
+{ SlidePartitionUpDiagonal_( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, false ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlidePartitionUpDiagonal
 ( DM& ATL, DM& ATR, DM& A00, DM& A01, DM& A02,
                     DM& A10, DM& A11, DM& A12,
   DM& ABL, DM& ABR, DM& A20, DM& A21, DM& A22 )
-{
-#ifndef RELEASE
-    PushCallStack("SlidePartitionUpDiagonal [DistMatrix]");
-#endif
-    View( ATL, A00 );
-    View1x2( ATR, A01, A02 );
-    View2x1( ABL, A10,
-                  A20 );
-    View2x2( ABR, A11, A12,
-                  A21, A22 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionUpDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, false ); }
 
 template<typename Int>
 inline void
@@ -549,37 +477,32 @@ SlideLockedPartitionUpDiagonal
   M& ABL, M& ABR, const M& A20, const M& A21, const M& A22 )
 { RUNDERSCORE(SlidePartitionUpDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, true ); }
 
+template<typename Int>
+inline void
+SlideLockedPartitionUpDiagonal
+( ADM& ATL, ADM& ATR, const ADM& A00, const ADM& A01, const ADM& A02,
+                      const ADM& A10, const ADM& A11, const ADM& A12,
+  ADM& ABL, ADM& ABR, const ADM& A20, const ADM& A21, const ADM& A22 )
+{ SlidePartitionUpDiagonal_( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, true ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlideLockedPartitionUpDiagonal
 ( DM& ATL, DM& ATR, const DM& A00, const DM& A01, const DM& A02,
                     const DM& A10, const DM& A11, const DM& A12,
   DM& ABL, DM& ABR, const DM& A20, const DM& A21, const DM& A22 )
-{
-#ifndef RELEASE
-    PushCallStack("SlideLockedPartitionUpDiagonal [DistMatrix]");
-#endif
-    LockedView( ATL, A00 );
-    LockedView1x2( ATR, A01, A02 );
-    LockedView2x1( ABL, A10,
-                        A20 );
-    LockedView2x2( ABR, A11, A12,
-                        A21, A22 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionUpDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, true ); }
 
 //
 // SlidePartitionDownDiagonal
 //
 
-template <typename Int>
+template <typename Q>
 inline void
 SlidePartitionDownDiagonal__
-( AM& ATL, AM& ATR, const AM& A00, const AM& A01, const AM& A02,
-                    const AM& A10, const AM& A11, const AM& A12,
-  AM& ABL, AM& ABR, const AM& A20, const AM& A21, const AM& A22, bool lock )
+( Q& ATL, Q& ATR, const Q& A00, const Q& A01, const Q& A02,
+                  const Q& A10, const Q& A11, const Q& A12,
+  Q& ABL, Q& ABR, const Q& A20, const Q& A21, const Q& A22, bool lock )
 {
     View2x2__( ATL, A00, A01,
                     A10, A11,      lock );
@@ -589,37 +512,17 @@ SlidePartitionDownDiagonal__
     View__(    ABR,           A22, lock );
 }
 
-template<typename Int>
+template<typename Q>
 inline void
 SlidePartitionDownDiagonal_
-( AM& ATL, AM& ATR, const AM& A00, const AM& A01, const AM& A02,
-                    const AM& A10, const AM& A11, const AM& A12,
-  AM& ABL, AM& ABR, const AM& A20, const AM& A21, const AM& A22, bool lock )
+( Q& ATL, Q& ATR, const Q& A00, const Q& A01, const Q& A02,
+                  const Q& A10, const Q& A11, const Q& A12,
+  Q& ABL, Q& ABR, const Q& A20, const Q& A21, const Q& A22, bool lock )
 {
-    PushCallStack("SlidePartitionDownDiagonal [Matrix]");
-    ATL.AssertDataTypes( ATR );
-    ATL.AssertDataTypes( A00 );
-    ATL.AssertDataTypes( A01 );
-    ATL.AssertDataTypes( A02 );
-    ATL.AssertDataTypes( A10 );
-    ATL.AssertDataTypes( A11 );
-    ATL.AssertDataTypes( A12 );
-    ATL.AssertDataTypes( ABL );
-    ATL.AssertDataTypes( ABR );
-    ATL.AssertDataTypes( A20 );
-    ATL.AssertDataTypes( A21 );
-    ATL.AssertDataTypes( A22 );
-    if ( !lock ) {
-    	A00.AssertUnlocked( AM::PartitionLock );
-    	A01.AssertUnlocked( AM::PartitionLock );
-    	A02.AssertUnlocked( AM::PartitionLock );
-    	A10.AssertUnlocked( AM::PartitionLock );
-    	A11.AssertUnlocked( AM::PartitionLock );
-    	A12.AssertUnlocked( AM::PartitionLock );
-    	A20.AssertUnlocked( AM::PartitionLock );
-    	A21.AssertUnlocked( AM::PartitionLock );
-    	A22.AssertUnlocked( AM::PartitionLock );
-    }
+    PushCallStack("SlidePartitionDownDiagonal");
+    AssertDataTypes( 13, &ATL, &ATR, &A00, &A01, &A02, &A10, &A11, &A12, &ABL, &ABR, &A20, &A21, &A22 );
+    if ( !lock )
+    	AssertUnlocked( 9, &A00, &A01, &A02, &A10, &A11, &A12, &A20, &A21, &A22 );
     AssertContiguous3x3( A00, A01, A02, A10, A11, A12, A20, A21, A22 );
     SlidePartitionDownDiagonal__( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, lock );
     PopCallStack();
@@ -641,26 +544,21 @@ SlidePartitionDownDiagonal
   M& ABL, M& ABR, M& A20, M& A21, M& A22 )
 { RUNDERSCORE(SlidePartitionDownDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, false ); }
 
+template<typename Int>
+inline void
+SlidePartitionDownDiagonal
+( ADM& ATL, ADM& ATR, ADM& A00, ADM& A01, ADM& A02,
+                      ADM& A10, ADM& A11, ADM& A12,
+  ADM& ABL, ADM& ABR, ADM& A20, ADM& A21, ADM& A22 )
+{ SlidePartitionDownDiagonal_( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, false ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlidePartitionDownDiagonal
 ( DM& ATL, DM& ATR, DM& A00, DM& A01, DM& A02,
                     DM& A10, DM& A11, DM& A12,
   DM& ABL, DM& ABR, DM& A20, DM& A21, DM& A22 )
-{
-#ifndef RELEASE
-    PushCallStack("SlidePartitionDownDiagonal [DistMatrix]");
-#endif
-    View2x2( ATL, A00, A01,
-                  A10, A11 );
-    View2x1( ATR, A02,
-                  A12 );
-    View1x2( ABL, A20, A21 );
-    View( ABR, A22 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionDownDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, false ); }
 
 template<typename Int>
 inline void
@@ -678,31 +576,26 @@ SlideLockedPartitionDownDiagonal
   M& ABL, M& ABR, const M& A20, const M& A21, const M& A22 )
 { RUNDERSCORE(SlidePartitionDownDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, true ); }
 
+template<typename Int>
+inline void
+SlideLockedPartitionDownDiagonal
+( ADM& ATL, ADM& ATR, const ADM& A00, const ADM& A01, const ADM& A02,
+                      const ADM& A10, const ADM& A11, const ADM& A12,
+  ADM& ABL, ADM& ABR, const ADM& A20, const ADM& A21, const ADM& A22 )
+{ SlidePartitionDownDiagonal_( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, true ); }
+
 template<typename T,Distribution U,Distribution V,typename Int>
 inline void
 SlideLockedPartitionDownDiagonal
 ( DM& ATL, DM& ATR, const DM& A00, const DM& A01, const DM& A02,
                     const DM& A10, const DM& A11, const DM& A12,
   DM& ABL, DM& ABR, const DM& A20, const DM& A21, const DM& A22 )
-{
-#ifndef RELEASE
-    PushCallStack("SlideLockedPartitionDownDiagonal [DistMatrix]");
-#endif
-    LockedView2x2( ATL, A00, A01,
-                        A10, A11 );
-    LockedView2x1( ATR, A02,
-                        A12 );
-    LockedView1x2( ABL, A20, A21 );
-    LockedView( ABR, A22 );
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
+{ RUNDERSCORE(SlidePartitionDownDiagonal_)( ATL, ATR, A00, A01, A02, A10, A11, A12, ABL, ABR, A20, A21, A22, true ); }
 
-#undef RUNDERSCORE
 #undef AM
 #undef DM
 #undef M
+#undef ADM
 
 } // namespace elem
 
